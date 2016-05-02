@@ -43,9 +43,10 @@ before_install:
   - pip install hererocks
   - hererocks here --$LUA --luarocks "2.2"
   - export PATH=$PATH:$PWD/here/bin
+  - luarocks install busted
 
 install:
   - luarocks make HS_DIR=$(pwd)/hyperscan-install/
 
 script:
-  - echo 'TODO'
+  - busted
