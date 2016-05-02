@@ -22,7 +22,8 @@ dependencies = {
 }
 external_dependencies = {
     HS = {
-        header = "hs/hs.h"
+        header = "hs/hs.h",
+        library = "hs",
     },
 }
 build = {
@@ -43,14 +44,14 @@ build = {
         unix = {
             modules = {
                 ['luahs'] = {
-                    libraries = {"stdc++", "m"},
+                    libraries = {"hs", "stdc++", "m"},
                 },
             },
         },
         mingw32 = {
             modules = {
                 ['luahs'] = {
-                    libraries = {"stdc++", "m"},
+                    libraries = {"hs", "stdc++", "m"},
                 },
             },
         },
