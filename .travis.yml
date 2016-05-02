@@ -1,0 +1,51 @@
+language: python # Need python environment for pip
+sudo: false # Use container-based infrastructure
+
+addons:
+  apt:
+    sources:
+      - kubuntu-backports
+      - ubuntu-toolchain-r-test
+    packages:
+      - gcc-4.8
+      - g++-4.8
+      - cmake
+      - ragel
+
+env:
+  - LUA="lua 5.1"
+  - LUA="lua 5.2"
+  - LUA="lua 5.3"
+  - LUA="luajit 2.0"
+  - LUA="luajit 2.1"
+
+before_install:
+  # use gcc 4.8
+  - export CC=gcc-4.8
+  - export CXX=g++-4.8
+
+  # hyperscan and its dependencies
+  - wget -O 'hyperscan-4.1.0.tar.gz' 'https://github.com/01org/hyperscan/archive/v4.1.0.tar.gz'
+  - echo 'b8de3f59c2bd1a8765a5aca5dfdd062766cef67218aedf63df2c92766524b3c1  hyperscan-4.1.0.tar.gz' | sha256sum -c -
+  - tar -xf 'hyperscan-4.1.0.tar.gz'
+  - wget 'http://downloads.sourceforge.net/project/boost/boost/1.60.0/boost_1_60_0.tar.bz2'
+  - echo '686affff989ac2488f79a97b9479efb9f2abae035b5ed4d8226de6857933fd3b  boost_1_60_0.tar.bz2' | sha256sum -c -
+  - tar -xf boost_1_60_0.tar.bz2
+  - ln -s ../../boost_1_60_0/boost hyperscan-4.1.0/include/
+  - mkdir hyperscan-build
+  - cd hyperscan-build
+  - cmake ../hyperscan-4.1.0 -DCMAKE_INSTALL_PREFIX=$(pwd)/../hyperscan-install/
+  - make -j 2
+  - make install
+  - cd ..
+
+  # Lua
+  - pip install hererocks
+  - hererocks here --$LUA --luarocks "2.2"
+  - export PATH=$PATH:$PWD/here/bin
+
+install:
+  - luarocks make HS_DIR=$(pwd)/hyperscan-install/
+
+script:
+  - echo 'TODO'
