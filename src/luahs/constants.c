@@ -1,8 +1,8 @@
-// lua-hyperscan, Lua bindings to hyperscan
+// luahs, Lua bindings to hyperscan
 // Copyright (C) 2015 Boris Nagaev
 // See the LICENSE file for terms of use.
 
-#include "hyperscan.h"
+#include "luahs.h"
 
 typedef struct Constant {
     int value;

@@ -1,15 +1,15 @@
--- lua-hyperscan, Lua bindings to hyperscan
+-- luahs, Lua bindings to hyperscan
 -- Copyright (C) 2015 Boris Nagaev
 -- See the LICENSE file for terms of use.
 
-package = "hyperscan"
+package = "luahs"
 version = "dev-1"
 source = {
-    url = "git://github.com/starius/lua-hyperscan.git",
+    url = "git://github.com/starius/luahs.git",
 }
 description = {
     summary = "Lua bindings to hyperscan",
-    homepage = "https://github.com/starius/lua-hyperscan",
+    homepage = "https://github.com/starius/luahs",
     license = "BSD 3-clause",
     detailed = [[
 Lua bindings to hyperscan.
@@ -28,11 +28,11 @@ external_dependencies = {
 build = {
     type = "builtin",
     modules = {
-        ['hyperscan'] = {
+        ['luahs'] = {
             sources = {
-                "src/hyperscan/constants.c",
-                --"src/hyperscan/functions.c",
-                "src/hyperscan/hyperscan.c",
+                "src/luahs/constants.c",
+                --"src/luahs/functions.c",
+                "src/luahs/luahs.c",
             },
             incdirs = {"$(HS_INCDIR)"},
             libdirs = {"$(HS_LIBDIR)"},
@@ -42,14 +42,14 @@ build = {
     platforms = {
         unix = {
             modules = {
-                ['hyperscan'] = {
+                ['luahs'] = {
                     libraries = {"stdc++", "m"},
                 },
             },
         },
         mingw32 = {
             modules = {
-                ['hyperscan'] = {
+                ['luahs'] = {
                     libraries = {"stdc++", "m"},
                 },
             },

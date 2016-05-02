@@ -1,2 +1,2 @@
-# lua-hyperscan
+# luahs
 Lua bindings to hyperscan, high-performance regular expression matching library
