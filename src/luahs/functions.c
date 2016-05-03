@@ -101,6 +101,20 @@ static const hs_platform_info_t* toPlatform(
     return platform;
 }
 
+Database* createDatabase(lua_State* L) {
+    Database* self = lua_newuserdata(L, sizeof(Database));
+    self->db = NULL;
+    if (luaL_newmetatable(L, DATABASE_MT)) {
+        // prepare metatable
+        compat_setfuncs(L, database_mt_funcs);
+        lua_newtable(L);
+        compat_setfuncs(L, database_methods);
+        lua_setfield(L, -2, "__index");
+    }
+    lua_setmetatable(L, -2);
+    return self;
+}
+
 static int compile(lua_State* L) {
     luaL_checktype(L, 1, LUA_TTABLE);
     // flags
@@ -117,17 +131,8 @@ static int compile(lua_State* L) {
     const hs_platform_info_t* platform = toPlatform(L, -1, &space);
     lua_pop(L, 1);
     // create userdata
-    Database* self = lua_newuserdata(L, sizeof(Database));
+    Database* self = createDatabase(L);
     int result = lua_gettop(L);
-    self->db = NULL;
-    if (luaL_newmetatable(L, DATABASE_MT)) {
-        // prepare metatable
-        compat_setfuncs(L, database_mt_funcs);
-        lua_newtable(L);
-        compat_setfuncs(L, database_methods);
-        lua_setfield(L, -2, "__index");
-    }
-    lua_setmetatable(L, -2);
     // compile
     hs_compile_error_t* compile_err;
     // single expression case
