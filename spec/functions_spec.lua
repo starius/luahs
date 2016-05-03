@@ -31,6 +31,38 @@ describe("compilation", function()
         }
     end)
 
+    it("specify flags", function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+            flags = luahs.pattern_flags.HS_FLAG_CASELESS,
+        }
+    end)
+
+    it("compiles multiple patterns", function()
+        local db = luahs.compile {
+            expressions = {
+                'aaa',
+                'bbb',
+            },
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+    end)
+
+    it("compiles multiple patterns with parameters", function()
+        local db = luahs.compile {
+            expressions = {
+                'aaa',
+                {
+                    expression = 'bbb',
+                    id = 42,
+                    flags = luahs.pattern_flags.HS_FLAG_CASELESS,
+                },
+            },
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+    end)
+
     it("throws on bad arguments", function()
         assert.has_error(function()
             luahs.compile()
@@ -49,6 +81,51 @@ describe("compilation", function()
                 expression = 'aaa',
                 mode = luahs.compile_mode.HS_MODE_BLOCK,
                 platform = 'foo',
+            }
+        end)
+        assert.has_error(function()
+            luahs.compile {
+                expressions = 'aaa',
+                mode = luahs.compile_mode.HS_MODE_BLOCK,
+            }
+        end)
+        assert.has_error(function()
+            luahs.compile {
+                expression = {
+                    'aaa',
+                    'bbb',
+                },
+                mode = luahs.compile_mode.HS_MODE_BLOCK,
+            }
+        end)
+        assert.has_error(function()
+            luahs.compile {
+                expressions = {
+                    {},
+                },
+                mode = luahs.compile_mode.HS_MODE_BLOCK,
+            }
+        end)
+        assert.has_error(function()
+            luahs.compile {
+                expressions = {
+                    {
+                        expression = 'aaa',
+                        flags = 10000001,
+                    },
+                },
+                mode = luahs.compile_mode.HS_MODE_BLOCK,
+            }
+        end)
+        assert.has_error(function()
+            luahs.compile {
+                expressions = {
+                    {
+                        expression = 'aaa',
+                        id = '',
+                    },
+                },
+                mode = luahs.compile_mode.HS_MODE_BLOCK,
             }
         end)
     end)

@@ -2,6 +2,8 @@
 // Copyright (C) 2015 Boris Nagaev
 // See the LICENSE file for terms of use.
 
+#include <string.h>
+
 #include "luahs.h"
 
 typedef struct Database {
@@ -117,10 +119,6 @@ Database* createDatabase(lua_State* L) {
 
 static int compile(lua_State* L) {
     luaL_checktype(L, 1, LUA_TTABLE);
-    // flags
-    lua_getfield(L, 1, "flags");
-    unsigned int flags = toFlags(L, -1, "flags");
-    lua_pop(L, 1);
     // mode
     lua_getfield(L, 1, "mode");
     unsigned int mode = toMode(L, -1);
@@ -135,33 +133,141 @@ static int compile(lua_State* L) {
     int result = lua_gettop(L);
     // compile
     hs_compile_error_t* compile_err;
-    // single expression case
-    lua_getfield(L, 1, "expression");
-    if (lua_type(L, -1) != LUA_TNIL) {
-        const char* expression = luaL_checkstring(L, -1);
-        hs_error_t err = hs_compile(
-            expression,
-            flags,
-            mode,
-            platform,
-            &self->db,
-            &compile_err
-        );
-        if (err != HS_SUCCESS) {
-            lua_pushfstring(
-                L,
-                "Unable to compile pattern '%s': %s",
+    hs_error_t err;
+    int compiled = 0;
+    if (!compiled) {
+        // single expression
+        lua_getfield(L, 1, "expression");
+        if (lua_type(L, -1) != LUA_TNIL) {
+            const char* expression = luaL_checkstring(L, -1);
+            // flags
+            lua_getfield(L, 1, "flags");
+            unsigned int flags = toFlags(L, -1, "flags");
+            lua_pop(L, 1);
+            err = hs_compile(
                 expression,
-                compile_err->message
+                flags,
+                mode,
+                platform,
+                &self->db,
+                &compile_err
             );
-            hs_free_compile_error(compile_err);
-            return lua_error(L);
+            compiled = 1;
         }
-        lua_pushvalue(L, result);
-        return 1;
+        lua_pop(L, 1);
     }
-    lua_pop(L, 1);
-    return 0; // TODO: implement other compile functions
+    if (!compiled) {
+        // multiple expressions
+        lua_getfield(L, 1, "expressions");
+        if (lua_type(L, -1) != LUA_TNIL) {
+            luaL_checktype(L, -1, LUA_TTABLE);
+            int nelements = compat_rawlen(L, -1);
+            const char** expressions = lua_newuserdata(
+                L,
+                nelements * sizeof(const char*)
+            );
+            unsigned int* ids_space = lua_newuserdata(
+                L,
+                nelements * sizeof(unsigned int)
+            );
+            memset(
+                ids_space,
+                0,
+                nelements * sizeof(unsigned int)
+            );
+            unsigned int* flags_space = lua_newuserdata(
+                L,
+                nelements * sizeof(unsigned int)
+            );
+            memset(
+                flags_space,
+                0,
+                nelements * sizeof(unsigned int)
+            );
+            unsigned int* ids = NULL;
+            unsigned int* flags = NULL;
+            lua_pushvalue(L, -4);
+            // table 'expressions' is on top now
+            int i;
+            for (i = 0; i < nelements; i++) {
+                lua_rawgeti(L, -1, i + 1);
+                int expression_type = lua_type(L, -1);
+                if (expression_type == LUA_TSTRING) {
+                    expressions[i] = luaL_checkstring(L, -1);
+                } else if (expression_type == LUA_TTABLE) {
+                    // arg1.expressions[i].expression
+                    lua_getfield(L, -1, "expression");
+                    expressions[i] = luaL_checkstring(L, -1);
+                    lua_pop(L, 1);
+                    // arg1.expressions[i].id
+                    lua_getfield(L, -1, "id");
+                    int id_type = lua_type(L, -1);
+                    if (id_type == LUA_TNUMBER) {
+                        if (!ids) {
+                            ids = ids_space;
+                        }
+                        ids[i] = luaL_checkinteger(L, -1);
+                    } else if (id_type != LUA_TNIL) {
+                        return luaL_error(
+                            L,
+                            "Bad type of arg1.expressions[i].id: %s",
+                            lua_typename(L, id_type)
+                        );
+                    }
+                    lua_pop(L, 1);
+                    // arg1.expressions[i].flags
+                    lua_getfield(L, -1, "flags");
+                    int flags_type = lua_type(L, -1);
+                    if (flags_type == LUA_TNUMBER) {
+                        if (!flags) {
+                            flags = flags_space;
+                        }
+                        flags[i] = toFlags(L, -1, "flags");
+                    } else if (flags_type != LUA_TNIL) {
+                        return luaL_error(
+                            L,
+                            "Bad type of arg1.expressions[i].flags: %s",
+                            lua_typename(L, flags_type)
+                        );
+                    }
+                    lua_pop(L, 1);
+                } else {
+                    return luaL_error(
+                        L,
+                        "Bad type of arg1.expressions[i].expression: %s",
+                        lua_typename(L, expression_type)
+                    );
+                }
+                lua_pop(L, 1);
+            }
+            err = hs_compile_multi(
+                expressions,
+                flags,
+                ids,
+                nelements,
+                mode,
+                platform,
+                &self->db,
+                &compile_err
+            );
+            compiled = 1;
+            lua_pop(L, 1); // arg1.expressions (copy)
+            lua_pop(L, 1); // flags (userdata)
+            lua_pop(L, 1); // ids (userdata)
+            lua_pop(L, 1); // expressions (userdata)
+        }
+        lua_pop(L, 1);
+    }
+    if (!compiled) {
+        return luaL_error(L, "Specify 'expression' or 'expressions'");
+    }
+    if (err != HS_SUCCESS) {
+        lua_pushfstring(L, "Unable to compile: %s", compile_err->message);
+        hs_free_compile_error(compile_err);
+        return lua_error(L);
+    }
+    lua_pushvalue(L, result);
+    return 1;
 }
 
 static int current_platform(lua_State* L) {
