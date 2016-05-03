@@ -38,6 +38,7 @@ before_install:
   - make -j 2
   - make install
   - cd ..
+  - export LD_LIBRARY_PATH="$(pwd)/hyperscan-install/lib/:$LD_LIBRARY_PATH"
 
   # Lua
   - pip install hererocks
