@@ -5,16 +5,16 @@
 #include "luahs.h"
 
 typedef struct Constant {
-    int value;
     const char* name;
+    int value;
 } Constant;
 
 typedef struct Namespace {
-    const Constant* constants;
     const char* name;
+    const Constant* constants;
 } Namespace;
 
-#define ITEM(c) {c, #c}
+#define ITEM(c) {#c, c}
 
 static const Constant errors[] = {
     ITEM(HS_SUCCESS),
