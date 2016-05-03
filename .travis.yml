@@ -34,7 +34,7 @@ before_install:
   - ln -s ../../boost_1_60_0/boost hyperscan-4.1.0/include/
   - mkdir hyperscan-build
   - cd hyperscan-build
-  - cmake ../hyperscan-4.1.0 -DCMAKE_INSTALL_PREFIX=$(pwd)/../hyperscan-install/
+  - cmake ../hyperscan-4.1.0 -DCMAKE_INSTALL_PREFIX=$(pwd)/../hyperscan-install/ -DBUILD_SHARED_LIBS=ON
   - make -j 2
   - make install
   - cd ..
