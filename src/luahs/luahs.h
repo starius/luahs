@@ -11,9 +11,13 @@
 
 #if LUA_VERSION_NUM == 501
 #define compat_setfuncs(L, funcs) luaL_register(L, 0, funcs)
+#define compat_rawlen lua_objlen
 #else
 #define compat_setfuncs(L, funcs) luaL_setfuncs(L, funcs, 0)
+#define compat_rawlen lua_rawlen
 #endif
+
+#define DATABASE_MT "hs_Database"
 
 void createConstantsTable(lua_State* L);
 const char* errorToString(hs_error_t error);
