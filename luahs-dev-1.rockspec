@@ -32,7 +32,7 @@ build = {
         ['luahs'] = {
             sources = {
                 "src/luahs/constants.c",
-                --"src/luahs/functions.c",
+                "src/luahs/functions.c",
                 "src/luahs/luahs.c",
             },
             incdirs = {"$(HS_INCDIR)"},
