@@ -6,9 +6,7 @@
 
 int luaopen_luahs(lua_State* L) {
     lua_newtable(L); // module "luahs"
-    createConstantsTable(L);
-    lua_setfield(L, -2, "constants");
-    createFunctionsTable(L);
-    lua_setfield(L, -2, "functions");
+    addConstants(L);
+    addFunctions(L);
     return 1;
 }

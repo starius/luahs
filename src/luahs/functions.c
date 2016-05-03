@@ -187,14 +187,6 @@ static luaL_Reg functions[] = {
 
 #undef ITEM
 
-void createFunctionsTable(lua_State* L) {
-    int length = 0;
-    const luaL_Reg* it;
-    // determine length
-    for (it = functions; it->name != NULL; it++) {
-        length += 1;
-    }
-    lua_createtable(L, 0, length);
-    // fill table
+void addFunctions(lua_State* L) {
     compat_setfuncs(L, functions);
 }

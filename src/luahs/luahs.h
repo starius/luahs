@@ -19,8 +19,8 @@
 
 #define DATABASE_MT "hs_Database"
 
-void createFunctionsTable(lua_State* L);
-void createConstantsTable(lua_State* L);
+void addFunctions(lua_State* L);
+void addConstants(lua_State* L);
 const char* errorToString(hs_error_t error);
 
 #endif

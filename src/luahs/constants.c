@@ -145,16 +145,8 @@ static int decode_error(lua_State* L) {
     return 1;
 }
 
-void createConstantsTable(lua_State* L) {
-    int length = 0;
-    length += 1; // errorToString
+void addConstants(lua_State* L) {
     const Namespace* it;
-    // determine length
-    for (it = namespaces; it->name != NULL; it++) {
-        length += 1;
-    }
-    lua_createtable(L, 0, length);
-    // fill table
     for (it = namespaces; it->name != NULL; it++) {
         pushConstants(L, it->constants);
         lua_setfield(L, -2, it->name);
