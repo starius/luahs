@@ -9,5 +9,6 @@
 #include <lua.h>
 
 void createConstantsTable(lua_State* L);
+const char* errorToString(hs_error_t error);
 
 #endif

@@ -14,4 +14,8 @@ describe("constants", function()
         assert.equal(2, luahs.constants.cpu_tuning.HS_TUNE_FAMILY_IVB)
     end)
 
+    it("decodes constants", function()
+        assert.equal("string", type(luahs.constants.decode_error(0)))
+    end)
+
 end)

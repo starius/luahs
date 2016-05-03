@@ -103,8 +103,51 @@ static void pushConstants(lua_State* L, const Constant* constants) {
     }
 }
 
+typedef struct Error {
+    hs_error_t code;
+    const char* name;
+} Error;
+
+static const Error error_messages[] = {
+    {HS_SUCCESS, "The engine completed normally."},
+    {HS_INVALID, "A parameter passed to this function was invalid."},
+    {HS_NOMEM, "A memory allocation failed."},
+    {HS_SCAN_TERMINATED, "The engine was terminated by callback."},
+    {HS_COMPILER_ERROR, "The pattern compiler failed."},
+    {HS_DB_VERSION_ERROR, "The given database was built for "
+        "a different version of Hyperscan."},
+    {HS_DB_PLATFORM_ERROR, "The given database was built for a "
+        "different platform (i.e., CPU type)."},
+    {HS_DB_MODE_ERROR, "The given database was built for "
+        "a different mode of operation."},
+    {HS_BAD_ALIGN, "A parameter passed to this function was "
+        "not correctly aligned."},
+    {HS_BAD_ALLOC, "The memory allocator (either malloc() or "
+        "the allocator set with hs_set_allocator()) did not "
+        "correctly return memory suitably aligned for the largest "
+        "representable data type on this platform."},
+    {},
+};
+
+const char* errorToString(hs_error_t error) {
+    const Error* it;
+    for (it = error_messages; it->name != NULL; it++) {
+        if (error == it->code) {
+            return it->name;
+        }
+    }
+    return "Unknown error.";
+}
+
+static int decode_error(lua_State* L) {
+    int err = luaL_checkinteger(L, 1);
+    lua_pushstring(L, errorToString(err));
+    return 1;
+}
+
 void createConstantsTable(lua_State* L) {
     int length = 0;
+    length += 1; // errorToString
     const Namespace* it;
     // determine length
     for (it = namespaces; it->name != NULL; it++) {
@@ -116,4 +159,6 @@ void createConstantsTable(lua_State* L) {
         pushConstants(L, it->constants);
         lua_setfield(L, -2, it->name);
     }
+    lua_pushcfunction(L, decode_error);
+    lua_setfield(L, -2, "decode_error");
 }
