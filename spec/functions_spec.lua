@@ -6,8 +6,8 @@ local luahs = require 'luahs'
 
 describe("functions", function()
 
-    it("populate_platform", function()
-        local platform = luahs.functions.populate_platform()
+    it("current_platform", function()
+        local platform = luahs.functions.current_platform()
         assert.truthy(platform.tune)
         assert.truthy(platform.cpu_features)
     end)
@@ -27,7 +27,7 @@ describe("compilation", function()
         local db = luahs.functions.compile {
             expression = 'aaa',
             mode = luahs.constants.compile_mode.HS_MODE_BLOCK,
-            platform = luahs.functions.populate_platform(),
+            platform = luahs.functions.current_platform(),
         }
     end)
 

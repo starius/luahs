@@ -159,7 +159,7 @@ static int compile(lua_State* L) {
     return 0; // TODO: implement other compile functions
 }
 
-static int populate_platform(lua_State* L) {
+static int current_platform(lua_State* L) {
     hs_platform_info_t plat;
     hs_error_t err = hs_populate_platform(&plat);
     if (err != HS_SUCCESS) {
@@ -180,7 +180,7 @@ static int populate_platform(lua_State* L) {
 #define ITEM(c) {#c, c}
 
 static luaL_Reg functions[] = {
-    ITEM(populate_platform),
+    ITEM(current_platform),
     ITEM(compile),
     {}
 };
