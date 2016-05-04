@@ -31,6 +31,19 @@ static int database_info(lua_State* L) {
     return 1;
 }
 
+static int database_serialize(lua_State* L) {
+    Database* self = luaL_checkudata(L, 1, DATABASE_MT);
+    char* bytes;
+    size_t length;
+    hs_error_t err = hs_serialize_database(self->db, &bytes, &length);
+    if (err != HS_SUCCESS) {
+        return luaL_error(L, errorToString(err));
+    }
+    lua_pushlstring(L, bytes, length);
+    free(bytes);
+    return 1;
+}
+
 static luaL_Reg database_mt_funcs[] = {
     {"__gc", free_database},
     {"__tostring", database_info},
@@ -39,6 +52,7 @@ static luaL_Reg database_mt_funcs[] = {
 
 static luaL_Reg database_methods[] = {
     {"info", database_info},
+    {"serialize", database_serialize},
     {}
 };
 

@@ -229,3 +229,16 @@ describe("compilation", function()
     end)
 
 end)
+
+describe("serialization", function()
+
+    it("serializes database", function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+        local data = db:serialize()
+        assert.truthy(#data > 0)
+    end)
+
+end)
