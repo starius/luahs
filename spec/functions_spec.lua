@@ -27,6 +27,23 @@ describe("compilation", function()
         local db = luahs.compile {
             expression = 'aaa',
             mode = luahs.compile_mode.HS_MODE_BLOCK,
+            platform = {
+                tuning = luahs.cpu_tuning.HS_TUNE_FAMILY_GENERIC,
+            },
+        }
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+            platform = {
+                tuning = {
+                    luahs.cpu_tuning.HS_TUNE_FAMILY_GENERIC,
+                    luahs.cpu_tuning.HS_TUNE_FAMILY_SNB,
+                },
+            },
+        }
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
             platform = luahs.current_platform(),
         }
     end)
@@ -36,6 +53,17 @@ describe("compilation", function()
             expression = 'aaa',
             mode = luahs.compile_mode.HS_MODE_BLOCK,
             flags = luahs.pattern_flags.HS_FLAG_CASELESS,
+        }
+    end)
+
+    it("specify flags as list", function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+            flags = {
+                luahs.pattern_flags.HS_FLAG_CASELESS,
+                luahs.pattern_flags.HS_FLAG_DOTALL,
+            },
         }
     end)
 
@@ -57,6 +85,23 @@ describe("compilation", function()
                     expression = 'bbb',
                     id = 42,
                     flags = luahs.pattern_flags.HS_FLAG_CASELESS,
+                },
+            },
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+    end)
+
+    it("compiles multiple patterns with multiple flags", function()
+        local db = luahs.compile {
+            expressions = {
+                'aaa',
+                {
+                    expression = 'bbb',
+                    id = 42,
+                    flags = {
+                        luahs.pattern_flags.HS_FLAG_CASELESS,
+                        luahs.pattern_flags.HS_FLAG_DOTALL,
+                    },
                 },
             },
             mode = luahs.compile_mode.HS_MODE_BLOCK,
