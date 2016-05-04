@@ -117,6 +117,36 @@ Database* createDatabase(lua_State* L) {
     return self;
 }
 
+typedef lua_Integer (*FilterFunction) (lua_State *L, int index);
+
+static lua_Integer toFlagsInMulti(lua_State* L, int index) {
+    return toFlags(L, index, "flags");
+}
+
+static int getIntegerField(
+    lua_State* L,
+    const char* field_name,
+    int* result,
+    FilterFunction filter
+) {
+    lua_getfield(L, -1, field_name);
+    int id_type = lua_type(L, -1);
+    int has_field = 0;
+    if (id_type == LUA_TNUMBER) {
+        *result = filter(L, -1);
+        has_field = 1;
+    } else if (id_type != LUA_TNIL) {
+        return luaL_error(
+            L,
+            "Bad type of arg1.expressions[i].%s: %s",
+            field_name,
+            lua_typename(L, id_type)
+        );
+    }
+    lua_pop(L, 1);
+    return has_field;
+}
+
 static hs_error_t compileMulti(
     lua_State* L,
     Database* self,
@@ -135,14 +165,24 @@ static hs_error_t compileMulti(
         nelements * sizeof(unsigned int)
     );
     memset(ids_space, 0, nelements * sizeof(unsigned int));
-    unsigned int* flags_space = lua_newuserdata(
+    unsigned int* flagss_space = lua_newuserdata(
         L,
         nelements * sizeof(unsigned int)
     );
-    memset(flags_space, 0, nelements * sizeof(unsigned int));
+    memset(flagss_space, 0, nelements * sizeof(unsigned int));
+    hs_expr_ext_t* ext_storage = lua_newuserdata(
+        L,
+        nelements * sizeof(hs_expr_ext_t)
+    );
+    const hs_expr_ext_t** ext_space = lua_newuserdata(
+        L,
+        nelements * sizeof(const hs_expr_ext_t*)
+    );
+    memset(ext_space, 0, nelements * sizeof(const hs_expr_ext_t*));
     unsigned int* ids = NULL;
-    unsigned int* flags = NULL;
-    lua_pushvalue(L, -4);
+    unsigned int* flagss = NULL;
+    const hs_expr_ext_t** ext = NULL;
+    lua_pushvalue(L, -6);
     // table 'expressions' is on top now
     int i;
     for (i = 0; i < nelements; i++) {
@@ -155,38 +195,43 @@ static hs_error_t compileMulti(
             lua_getfield(L, -1, "expression");
             expressions[i] = luaL_checkstring(L, -1);
             lua_pop(L, 1);
-            // arg1.expressions[i].id
-            lua_getfield(L, -1, "id");
-            int id_type = lua_type(L, -1);
-            if (id_type == LUA_TNUMBER) {
+            // integer fields
+            int id;
+            if (getIntegerField(L, "id", &id, luaL_checkinteger)) {
                 if (!ids) {
                     ids = ids_space;
                 }
-                ids[i] = luaL_checkinteger(L, -1);
-            } else if (id_type != LUA_TNIL) {
-                return luaL_error(
-                    L,
-                    "Bad type of arg1.expressions[i].id: %s",
-                    lua_typename(L, id_type)
-                );
+                ids[i] = id;
             }
-            lua_pop(L, 1);
-            // arg1.expressions[i].flags
-            lua_getfield(L, -1, "flags");
-            int flags_type = lua_type(L, -1);
-            if (flags_type == LUA_TNUMBER) {
-                if (!flags) {
-                    flags = flags_space;
+            int flags;
+            if (getIntegerField(L, "flags", &flags, toFlagsInMulti)) {
+                if (!flagss) {
+                    flagss = flagss_space;
                 }
-                flags[i] = toFlags(L, -1, "flags");
-            } else if (flags_type != LUA_TNIL) {
-                return luaL_error(
-                    L,
-                    "Bad type of arg1.expressions[i].flags: %s",
-                    lua_typename(L, flags_type)
-                );
+                flagss[i] = flags;
             }
-            lua_pop(L, 1);
+            // extended flags
+            unsigned long long ext_flags = 0;
+            int min_offset, max_offset, min_length;
+            if (getIntegerField(L, "min_offset", &min_offset, luaL_checkinteger)) {
+                ext_flags |= HS_EXT_FLAG_MIN_OFFSET;
+            }
+            if (getIntegerField(L, "max_offset", &max_offset, luaL_checkinteger)) {
+                ext_flags |= HS_EXT_FLAG_MAX_OFFSET;
+            }
+            if (getIntegerField(L, "min_length", &min_length, luaL_checkinteger)) {
+                ext_flags |= HS_EXT_FLAG_MIN_LENGTH;
+            }
+            if (ext_flags) {
+                if (!ext) {
+                    ext = ext_space;
+                }
+                ext[i] = &(ext_storage[i]);
+                ext_storage[i].flags = ext_flags;
+                ext_storage[i].min_offset = min_offset;
+                ext_storage[i].max_offset = max_offset;
+                ext_storage[i].min_length = min_length;
+            }
         } else {
             return luaL_error(
                 L,
@@ -196,19 +241,36 @@ static hs_error_t compileMulti(
         }
         lua_pop(L, 1);
     }
-    hs_error_t err = hs_compile_multi(
-        expressions,
-        flags,
-        ids,
-        nelements,
-        mode,
-        platform,
-        &self->db,
-        compile_err
-    );
+    hs_error_t err;
+    if (ext) {
+        err = hs_compile_ext_multi(
+            expressions,
+            flagss,
+            ids,
+            ext,
+            nelements,
+            mode,
+            platform,
+            &self->db,
+            compile_err
+        );
+    } else {
+        err = hs_compile_multi(
+            expressions,
+            flagss,
+            ids,
+            nelements,
+            mode,
+            platform,
+            &self->db,
+            compile_err
+        );
+    }
     lua_pop(L, 1); // arg1.expressions (copy)
-    lua_pop(L, 1); // flags (userdata)
-    lua_pop(L, 1); // ids (userdata)
+    lua_pop(L, 1); // ext_space (userdata)
+    lua_pop(L, 1); // ext_storage (userdata)
+    lua_pop(L, 1); // flagss_space (userdata)
+    lua_pop(L, 1); // ids_space (userdata)
     lua_pop(L, 1); // expressions (userdata)
     return err;
 }

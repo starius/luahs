@@ -63,6 +63,21 @@ describe("compilation", function()
         }
     end)
 
+    it("compiles multiple patterns with extended flags", function()
+        local db = luahs.compile {
+            expressions = {
+                'aaa',
+                {
+                    expression = 'bbb',
+                    min_offset = 100,
+                    max_offset = 140,
+                    min_length = 1,
+                },
+            },
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+    end)
+
     it("throws on bad arguments", function()
         assert.has_error(function()
             luahs.compile()
@@ -123,6 +138,28 @@ describe("compilation", function()
                     {
                         expression = 'aaa',
                         id = '',
+                    },
+                },
+                mode = luahs.compile_mode.HS_MODE_BLOCK,
+            }
+        end)
+        assert.has_error(function()
+            luahs.compile {
+                expressions = {
+                    {
+                        expression = 'aaa',
+                        min_length = '',
+                    },
+                },
+                mode = luahs.compile_mode.HS_MODE_BLOCK,
+            }
+        end)
+        assert.has_error(function()
+            luahs.compile {
+                expressions = {
+                    {
+                        expression = 'aaa',
+                        min_length = 4,
                     },
                 },
                 mode = luahs.compile_mode.HS_MODE_BLOCK,
