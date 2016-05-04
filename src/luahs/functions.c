@@ -19,12 +19,26 @@ static int free_database(lua_State* L) {
     return 0;
 }
 
+static int database_info(lua_State* L) {
+    Database* self = luaL_checkudata(L, 1, DATABASE_MT);
+    char* info;
+    hs_error_t err = hs_database_info(self->db, &info);
+    if (err != HS_SUCCESS) {
+        return luaL_error(L, errorToString(err));
+    }
+    lua_pushstring(L, info);
+    free(info);
+    return 1;
+}
+
 static luaL_Reg database_mt_funcs[] = {
     {"__gc", free_database},
+    {"__tostring", database_info},
     {}
 };
 
 static luaL_Reg database_methods[] = {
+    {"info", database_info},
     {}
 };
 

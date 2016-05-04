@@ -212,4 +212,15 @@ describe("compilation", function()
         end)
     end)
 
+    it("database.info", function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+        local info = db:info()
+        local as_string = tostring(db)
+        assert.equal(info, as_string)
+        assert.truthy(as_string:match('Version'))
+    end)
+
 end)
