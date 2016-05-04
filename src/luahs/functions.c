@@ -132,7 +132,8 @@ static int getIntegerField(
     lua_getfield(L, -1, field_name);
     int id_type = lua_type(L, -1);
     int has_field = 0;
-    if (id_type == LUA_TNUMBER) {
+    if (id_type == LUA_TNUMBER ||
+            (filter == toFlagsInMulti && id_type == LUA_TTABLE)) {
         *result = filter(L, -1);
         has_field = 1;
     } else if (id_type != LUA_TNIL) {
