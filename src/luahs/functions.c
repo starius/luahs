@@ -356,7 +356,20 @@ static int compile(lua_State* L) {
         return luaL_error(L, "Specify 'expression' or 'expressions'");
     }
     if (err != HS_SUCCESS) {
-        lua_pushfstring(L, "Unable to compile: %s", compile_err->message);
+        if (compile_err->expression >= 0) {
+            lua_pushfstring(
+                L,
+                "Unable to compile expression #%d: %s",
+                compile_err->expression,
+                compile_err->message
+            );
+        } else {
+            lua_pushfstring(
+                L,
+                "Unable to compile expression: %s",
+                compile_err->message
+            );
+        }
         hs_free_compile_error(compile_err);
         return lua_error(L);
     }
