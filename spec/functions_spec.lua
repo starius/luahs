@@ -232,13 +232,16 @@ end)
 
 describe("serialization", function()
 
-    it("serializes database", function()
+    it("serializes and deserializes database", function()
         local db = luahs.compile {
             expression = 'aaa',
             mode = luahs.compile_mode.HS_MODE_BLOCK,
         }
         local data = db:serialize()
         assert.truthy(#data > 0)
+        local db1 = luahs.deserialize(data)
+        assert.equal(db:info(), db1:info())
+        assert.equal(db:serialize(), db1:serialize())
     end)
 
 end)

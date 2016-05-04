@@ -387,12 +387,24 @@ static int version(lua_State* L) {
     return 1;
 }
 
+static int deserialize(lua_State* L) {
+    size_t length;
+    const char* bytes = luaL_checklstring(L, 1, &length);
+    Database* self = createDatabase(L);
+    hs_error_t err = hs_deserialize_database(bytes, length, &self->db);
+    if (err != HS_SUCCESS) {
+        return luaL_error(L, errorToString(err));
+    }
+    return 1;
+}
+
 #define ITEM(c) {#c, c}
 
 static luaL_Reg functions[] = {
     ITEM(current_platform),
     ITEM(version),
     ITEM(compile),
+    ITEM(deserialize),
     {}
 };
 
