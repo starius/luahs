@@ -12,6 +12,11 @@ describe("functions", function()
         assert.truthy(platform.cpu_features)
     end)
 
+    it("version", function()
+        local version = luahs.version()
+        assert.truthy(version:match('%.'))
+    end)
+
 end)
 
 describe("compilation", function()

@@ -368,10 +368,16 @@ static int current_platform(lua_State* L) {
     return 1;
 }
 
+static int version(lua_State* L) {
+    lua_pushstring(L, hs_version());
+    return 1;
+}
+
 #define ITEM(c) {#c, c}
 
 static luaL_Reg functions[] = {
     ITEM(current_platform),
+    ITEM(version),
     ITEM(compile),
     {}
 };
