@@ -304,6 +304,28 @@ static hs_error_t compileMulti(
     return err;
 }
 
+static int throwCompileError(
+    lua_State* L,
+    hs_compile_error_t* compile_err
+) {
+    if (compile_err->expression >= 0) {
+        lua_pushfstring(
+            L,
+            "Unable to compile expression #%d: %s",
+            compile_err->expression,
+            compile_err->message
+        );
+    } else {
+        lua_pushfstring(
+            L,
+            "Unable to compile expression: %s",
+            compile_err->message
+        );
+    }
+    hs_free_compile_error(compile_err);
+    return lua_error(L);
+}
+
 static int compile(lua_State* L) {
     luaL_checktype(L, 1, LUA_TTABLE);
     // mode
@@ -356,22 +378,7 @@ static int compile(lua_State* L) {
         return luaL_error(L, "Specify 'expression' or 'expressions'");
     }
     if (err != HS_SUCCESS) {
-        if (compile_err->expression >= 0) {
-            lua_pushfstring(
-                L,
-                "Unable to compile expression #%d: %s",
-                compile_err->expression,
-                compile_err->message
-            );
-        } else {
-            lua_pushfstring(
-                L,
-                "Unable to compile expression: %s",
-                compile_err->message
-            );
-        }
-        hs_free_compile_error(compile_err);
-        return lua_error(L);
+        return throwCompileError(L, compile_err);
     }
     lua_pushvalue(L, result);
     return 1;
