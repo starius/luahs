@@ -128,6 +128,12 @@ describe("compilation", function()
         }
     end)
 
+    it("get information about RE", function()
+        local db = luahs.expression_info('aaa?')
+        assert.equal(2, db.min_width)
+        assert.equal(3, db.max_width)
+    end)
+
     it("throws on bad arguments", function()
         assert.has_error(function()
             luahs.compile()

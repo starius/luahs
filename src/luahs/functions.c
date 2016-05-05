@@ -418,6 +418,39 @@ static int deserialize(lua_State* L) {
     return 1;
 }
 
+static int expression_info(lua_State* L) {
+    int nargs = lua_gettop(L);
+    const char* expression = luaL_checkstring(L, 1);
+    unsigned int flags = 0;
+    if (nargs >= 2) {
+        flags = toFlags(L, 2, "flags");
+    }
+    hs_expr_info_t* info;
+    hs_compile_error_t* compile_err;
+    hs_error_t err = hs_expression_info(
+        expression,
+        flags,
+        &info,
+        &compile_err
+    );
+    if (err != HS_SUCCESS) {
+        return throwCompileError(L, compile_err);
+    }
+    lua_createtable(L, 0, 4);
+    lua_pushinteger(L, info->min_width);
+    lua_setfield(L, -2, "min_width");
+    lua_pushinteger(L, info->max_width);
+    lua_setfield(L, -2, "max_width");
+    lua_pushboolean(L, info->unordered_matches);
+    lua_setfield(L, -2, "unordered_matches");
+    lua_pushboolean(L, info->matches_at_eod);
+    lua_setfield(L, -2, "matches_at_eod");
+    lua_pushboolean(L, info->matches_only_at_eod);
+    lua_setfield(L, -2, "matches_only_at_eod");
+    free(info);
+    return 1;
+}
+
 #define ITEM(c) {#c, c}
 
 static luaL_Reg functions[] = {
@@ -425,6 +458,7 @@ static luaL_Reg functions[] = {
     ITEM(version),
     ITEM(compile),
     ITEM(deserialize),
+    ITEM(expression_info),
     {}
 };
 
