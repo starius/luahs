@@ -153,4 +153,6 @@ void addConstants(lua_State* L) {
     }
     lua_pushcfunction(L, decode_error);
     lua_setfield(L, -2, "decode_error");
+    lua_pushinteger(L, HS_OFFSET_PAST_HORIZON);
+    lua_setfield(L, -2, "HS_OFFSET_PAST_HORIZON");
 }
