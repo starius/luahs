@@ -18,6 +18,7 @@
 #endif
 
 #define DATABASE_MT "hs_Database"
+#define SCRATCH_MT "hs_Scratch"
 
 void addFunctions(lua_State* L);
 void addConstants(lua_State* L);
