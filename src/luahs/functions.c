@@ -14,6 +14,12 @@ typedef struct Scratch {
     hs_scratch_t* scratch;
 } Scratch;
 
+typedef struct MatchContext {
+    lua_State* L;
+    int results_table;
+    int nresults;
+} MatchContext;
+
 static int free_database(lua_State* L) {
     Database* self = luaL_checkudata(L, 1, DATABASE_MT);
     hs_error_t err = hs_free_database(self->db);
@@ -48,6 +54,59 @@ static int database_serialize(lua_State* L) {
     return 1;
 }
 
+static int luahs_match_event_handler(
+    unsigned int id,
+    unsigned long long from,
+    unsigned long long to,
+    unsigned int flags,
+    void* context
+) {
+    MatchContext* match_context = (MatchContext*)context;
+    lua_State* L = match_context->L;
+    lua_createtable(L, 0, 3);
+    lua_pushinteger(L, id);
+    lua_setfield(L, -2, "id");
+    lua_pushinteger(L, from);
+    lua_setfield(L, -2, "from");
+    lua_pushinteger(L, to);
+    lua_setfield(L, -2, "to");
+    match_context->nresults += 1;
+    lua_rawseti(
+        L,
+        match_context->results_table,
+        match_context->nresults
+    );
+    return 0;
+}
+
+static int scan(lua_State* L) {
+    Database* db = luaL_checkudata(L, 1, DATABASE_MT);
+    size_t length;
+    const char* data = luaL_checklstring(L, 2, &length);
+    Scratch* scratch = luaL_checkudata(L, 3, SCRATCH_MT);
+    lua_newtable(L);
+    int results_table = lua_gettop(L);
+    MatchContext match_context = {
+        .L = L,
+        .results_table = results_table,
+        .nresults = 0,
+    };
+    int flags; // unused
+    hs_error_t err = hs_scan(
+        db->db,
+        data,
+        length,
+        flags,
+        scratch->scratch,
+        luahs_match_event_handler,
+        &match_context
+    );
+    if (err != HS_SUCCESS) {
+        return luaL_error(L, errorToString(err));
+    }
+    return 1;
+}
+
 static luaL_Reg database_mt_funcs[] = {
     {"__gc", free_database},
     {"__tostring", database_info},
@@ -60,6 +119,7 @@ static luaL_Reg database_methods[] = {
     {"info", database_info},
     {"serialize", database_serialize},
     {"makeScratch", alloc_scratch},
+    {"scan", scan},
     {}
 };
 
