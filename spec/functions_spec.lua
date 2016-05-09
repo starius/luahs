@@ -223,7 +223,11 @@ describe("compilation", function()
         end)
     end)
 
-    it("database.info", function()
+end)
+
+describe("database.info", function()
+
+    it("get description of the database as string", function()
         local db = luahs.compile {
             expression = 'aaa',
             mode = luahs.compile_mode.HS_MODE_BLOCK,
