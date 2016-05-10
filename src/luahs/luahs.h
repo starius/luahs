@@ -20,6 +20,20 @@
 #define DATABASE_MT "hs_Database"
 #define SCRATCH_MT "hs_Scratch"
 
+typedef struct Database {
+    hs_database_t* db;
+} Database;
+
+typedef struct Scratch {
+    hs_scratch_t* scratch;
+} Scratch;
+
+typedef struct MatchContext {
+    lua_State* L;
+    int results_table;
+    int nresults;
+} MatchContext;
+
 void addFunctions(lua_State* L);
 void addConstants(lua_State* L);
 const char* errorToString(hs_error_t error);

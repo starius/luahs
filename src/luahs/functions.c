@@ -6,20 +6,6 @@
 
 #include "luahs.h"
 
-typedef struct Database {
-    hs_database_t* db;
-} Database;
-
-typedef struct Scratch {
-    hs_scratch_t* scratch;
-} Scratch;
-
-typedef struct MatchContext {
-    lua_State* L;
-    int results_table;
-    int nresults;
-} MatchContext;
-
 static int free_database(lua_State* L) {
     Database* self = luaL_checkudata(L, 1, DATABASE_MT);
     hs_error_t err = hs_free_database(self->db);
