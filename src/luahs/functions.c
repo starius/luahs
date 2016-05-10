@@ -93,7 +93,7 @@ static int scan(lua_State* L) {
     return 1;
 }
 
-static luaL_Reg database_mt_funcs[] = {
+static const luaL_Reg database_mt_funcs[] = {
     {"__gc", free_database},
     {"__tostring", database_info},
     {}
@@ -101,7 +101,7 @@ static luaL_Reg database_mt_funcs[] = {
 
 static int alloc_scratch(lua_State* L);
 
-static luaL_Reg database_methods[] = {
+static const luaL_Reg database_methods[] = {
     {"info", database_info},
     {"serialize", database_serialize},
     {"makeScratch", alloc_scratch},
@@ -537,12 +537,12 @@ static int grow_scratch(lua_State* L) {
 
 static int clone_scratch(lua_State* L);
 
-static luaL_Reg scratch_mt_funcs[] = {
+static const luaL_Reg scratch_mt_funcs[] = {
     {"__gc", free_scratch},
     {}
 };
 
-static luaL_Reg scratch_methods[] = {
+static const luaL_Reg scratch_methods[] = {
     {"size", scratch_size},
     {"grow", grow_scratch},
     {"clone", clone_scratch},
@@ -585,7 +585,7 @@ static int clone_scratch(lua_State* L) {
 }
 #define ITEM(c) {#c, c}
 
-static luaL_Reg functions[] = {
+static const luaL_Reg functions[] = {
     ITEM(current_platform),
     ITEM(version),
     ITEM(compile),
