@@ -4,11 +4,19 @@
 
 #include "luahs.h"
 
-int luaopen_luahs(lua_State* L) {
+#ifdef LUAHS_RUNTIME
+#define LUAHS_LUAOPENER luaopen_luahs_runtime
+#else
+#define LUAHS_LUAOPENER luaopen_luahs
+#endif
+
+int LUAHS_LUAOPENER(lua_State* L) {
     lua_newtable(L); // module "luahs"
     addConstants(L);
     addUtil(L);
+#ifndef LUAHS_RUNTIME
     addCompile(L);
+#endif
     addDatabase(L);
     return 1;
 }

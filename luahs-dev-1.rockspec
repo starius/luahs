@@ -50,6 +50,20 @@ build = {
             libdirs = {"$(HS_LIBDIR)"},
             libraries = {"hs"},
         },
+        ['luahs_runtime'] = {
+            sources = {
+                "src/luahs/constants.c",
+                "src/luahs/util.c",
+                "src/luahs/database.c",
+                "src/luahs/scratch.c",
+                "src/luahs/scan.c",
+                "src/luahs/luahs.c",
+            },
+            incdirs = {"$(HS_INCDIR)"},
+            libdirs = {"$(HS_LIBDIR)"},
+            defines = {"LUAHS_RUNTIME"},
+            libraries = {"hs_runtime"},
+        },
     },
     platforms = {
         unix = {
