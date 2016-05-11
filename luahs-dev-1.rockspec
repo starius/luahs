@@ -26,6 +26,13 @@ external_dependencies = {
         library = "hs",
     },
 }
+
+local platforms_modules = {
+    ['luahs'] = {
+        libraries = {"hs", "stdc++", "m"},
+    },
+}
+
 build = {
     type = "builtin",
     modules = {
@@ -46,18 +53,10 @@ build = {
     },
     platforms = {
         unix = {
-            modules = {
-                ['luahs'] = {
-                    libraries = {"hs", "stdc++", "m"},
-                },
-            },
+            modules = platforms_modules,
         },
         mingw32 = {
-            modules = {
-                ['luahs'] = {
-                    libraries = {"hs", "stdc++", "m"},
-                },
-            },
+            modules = platforms_modules,
         },
     },
 }
