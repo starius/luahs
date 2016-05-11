@@ -42,3 +42,6 @@ luac.out
 # dependencies
 hyperscan*
 boost_*
+
+# text editors
+*.swp
