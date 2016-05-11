@@ -6,109 +6,6 @@
 
 #include "luahs.h"
 
-static int free_database(lua_State* L) {
-    Database* self = luaL_checkudata(L, 1, DATABASE_MT);
-    hs_error_t err = hs_free_database(self->db);
-    if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
-    }
-    return 0;
-}
-
-static int database_info(lua_State* L) {
-    Database* self = luaL_checkudata(L, 1, DATABASE_MT);
-    char* info;
-    hs_error_t err = hs_database_info(self->db, &info);
-    if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
-    }
-    lua_pushstring(L, info);
-    free(info);
-    return 1;
-}
-
-static int database_serialize(lua_State* L) {
-    Database* self = luaL_checkudata(L, 1, DATABASE_MT);
-    char* bytes;
-    size_t length;
-    hs_error_t err = hs_serialize_database(self->db, &bytes, &length);
-    if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
-    }
-    lua_pushlstring(L, bytes, length);
-    free(bytes);
-    return 1;
-}
-
-static int luahs_match_event_handler(
-    unsigned int id,
-    unsigned long long from,
-    unsigned long long to,
-    unsigned int flags,
-    void* context
-) {
-    MatchContext* match_context = (MatchContext*)context;
-    lua_State* L = match_context->L;
-    lua_createtable(L, 0, 3);
-    lua_pushinteger(L, id);
-    lua_setfield(L, -2, "id");
-    lua_pushinteger(L, from);
-    lua_setfield(L, -2, "from");
-    lua_pushinteger(L, to);
-    lua_setfield(L, -2, "to");
-    match_context->nresults += 1;
-    lua_rawseti(
-        L,
-        match_context->results_table,
-        match_context->nresults
-    );
-    return 0;
-}
-
-static int scan(lua_State* L) {
-    Database* db = luaL_checkudata(L, 1, DATABASE_MT);
-    size_t length;
-    const char* data = luaL_checklstring(L, 2, &length);
-    Scratch* scratch = luaL_checkudata(L, 3, SCRATCH_MT);
-    lua_newtable(L);
-    int results_table = lua_gettop(L);
-    MatchContext match_context = {
-        .L = L,
-        .results_table = results_table,
-        .nresults = 0,
-    };
-    int flags; // unused
-    hs_error_t err = hs_scan(
-        db->db,
-        data,
-        length,
-        flags,
-        scratch->scratch,
-        luahs_match_event_handler,
-        &match_context
-    );
-    if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
-    }
-    return 1;
-}
-
-static const luaL_Reg database_mt_funcs[] = {
-    {"__gc", free_database},
-    {"__tostring", database_info},
-    {}
-};
-
-static int alloc_scratch(lua_State* L);
-
-static const luaL_Reg database_methods[] = {
-    {"info", database_info},
-    {"serialize", database_serialize},
-    {"makeScratch", alloc_scratch},
-    {"scan", scan},
-    {}
-};
-
 static int toFlags(lua_State* L, int index, const char* name) {
     // flags can be provided as integer or as a table of integers
     int flags = 0;
@@ -182,20 +79,6 @@ static const hs_platform_info_t* toPlatform(
         return NULL; // unreachable
     }
     return platform;
-}
-
-Database* createDatabase(lua_State* L) {
-    Database* self = lua_newuserdata(L, sizeof(Database));
-    self->db = NULL;
-    if (luaL_newmetatable(L, DATABASE_MT)) {
-        // prepare metatable
-        compat_setfuncs(L, database_mt_funcs);
-        lua_newtable(L);
-        compat_setfuncs(L, database_methods);
-        lua_setfield(L, -2, "__index");
-    }
-    lua_setmetatable(L, -2);
-    return self;
 }
 
 typedef lua_Integer (*FilterFunction) (lua_State *L, int index);
@@ -437,40 +320,6 @@ static int compile(lua_State* L) {
     return 1;
 }
 
-static int current_platform(lua_State* L) {
-    hs_platform_info_t plat;
-    hs_error_t err = hs_populate_platform(&plat);
-    if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
-    }
-    lua_createtable(L, 0, 4);
-    lua_pushinteger(L, plat.tune);
-    lua_setfield(L, -2, "tune");
-    lua_pushinteger(L, plat.cpu_features);
-    lua_setfield(L, -2, "cpu_features");
-    lua_pushinteger(L, plat.reserved1);
-    lua_setfield(L, -2, "reserved1");
-    lua_pushinteger(L, plat.reserved2);
-    lua_setfield(L, -2, "reserved2");
-    return 1;
-}
-
-static int version(lua_State* L) {
-    lua_pushstring(L, hs_version());
-    return 1;
-}
-
-static int deserialize(lua_State* L) {
-    size_t length;
-    const char* bytes = luaL_checklstring(L, 1, &length);
-    Database* self = createDatabase(L);
-    hs_error_t err = hs_deserialize_database(bytes, length, &self->db);
-    if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
-    }
-    return 1;
-}
-
 static int expression_info(lua_State* L) {
     int nargs = lua_gettop(L);
     const char* expression = luaL_checkstring(L, 1);
@@ -504,98 +353,14 @@ static int expression_info(lua_State* L) {
     return 1;
 }
 
-static int free_scratch(lua_State* L) {
-    Scratch* self = luaL_checkudata(L, 1, SCRATCH_MT);
-    hs_error_t err = hs_free_scratch(self->scratch);
-    if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
-    }
-    return 0;
-}
-
-static int scratch_size(lua_State* L) {
-    Scratch* self = luaL_checkudata(L, 1, SCRATCH_MT);
-    size_t size;
-    hs_error_t err = hs_scratch_size(self->scratch, &size);
-    if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
-    }
-    lua_pushinteger(L, size);
-    return 1;
-}
-
-static int grow_scratch(lua_State* L) {
-    Scratch* self = luaL_checkudata(L, 1, SCRATCH_MT);
-    Database* db = luaL_checkudata(L, 2, DATABASE_MT);
-    // self->scratch is not NULL
-    hs_error_t err = hs_alloc_scratch(db->db, &self->scratch);
-    if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
-    }
-    return 0;
-}
-
-static int clone_scratch(lua_State* L);
-
-static const luaL_Reg scratch_mt_funcs[] = {
-    {"__gc", free_scratch},
-    {}
-};
-
-static const luaL_Reg scratch_methods[] = {
-    {"size", scratch_size},
-    {"grow", grow_scratch},
-    {"clone", clone_scratch},
-    {}
-};
-
-Scratch* createScratch(lua_State* L) {
-    Scratch* self = lua_newuserdata(L, sizeof(Scratch));
-    self->scratch = NULL;
-    if (luaL_newmetatable(L, SCRATCH_MT)) {
-        // prepare metatable
-        compat_setfuncs(L, scratch_mt_funcs);
-        lua_newtable(L);
-        compat_setfuncs(L, scratch_methods);
-        lua_setfield(L, -2, "__index");
-    }
-    lua_setmetatable(L, -2);
-    return self;
-}
-
-static int alloc_scratch(lua_State* L) {
-    Database* db = luaL_checkudata(L, 1, DATABASE_MT);
-    Scratch* self = createScratch(L);
-    // self->scratch is NULL
-    hs_error_t err = hs_alloc_scratch(db->db, &self->scratch);
-    if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
-    }
-    return 1;
-}
-
-static int clone_scratch(lua_State* L) {
-    Scratch* self = luaL_checkudata(L, 1, SCRATCH_MT);
-    Scratch* copy = createScratch(L);
-    hs_error_t err = hs_clone_scratch(self->scratch, &copy->scratch);
-    if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
-    }
-    return 1;
-}
 #define ITEM(c) {#c, c}
 
-static const luaL_Reg functions[] = {
-    ITEM(current_platform),
-    ITEM(version),
+static luaL_Reg functions[] = {
     ITEM(compile),
-    ITEM(deserialize),
     ITEM(expression_info),
     {}
 };
 
-#undef ITEM
-
-void addFunctions(lua_State* L) {
+void addCompile(lua_State* L) {
     compat_setfuncs(L, functions);
 }

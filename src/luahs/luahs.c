@@ -7,6 +7,8 @@
 int luaopen_luahs(lua_State* L) {
     lua_newtable(L); // module "luahs"
     addConstants(L);
-    addFunctions(L);
+    addUtil(L);
+    addCompile(L);
+    addDatabase(L);
     return 1;
 }

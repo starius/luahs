@@ -20,6 +20,9 @@
 #define DATABASE_MT "hs_Database"
 #define SCRATCH_MT "hs_Scratch"
 
+// for luaL_Reg
+#define ITEM(c) {#c, c}
+
 typedef struct Database {
     hs_database_t* db;
 } Database;
@@ -34,8 +37,16 @@ typedef struct MatchContext {
     int nresults;
 } MatchContext;
 
-void addFunctions(lua_State* L);
+Database* createDatabase(lua_State* L);
+Scratch* createScratch(lua_State* L);
+
 void addConstants(lua_State* L);
+void addUtil(lua_State* L);
+void addDatabase(lua_State* L);
+void addCompile(lua_State* L);
 const char* errorToString(hs_error_t error);
+
+int makeScratch(lua_State* L);
+int scanAgainstDatabase(lua_State* L);
 
 #endif
