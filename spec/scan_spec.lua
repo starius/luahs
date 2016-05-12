@@ -52,4 +52,15 @@ describe("scan", function()
         }, db:scan(' foo bar bar', scratch))
     end)
 
+    it("throws if mode doesn't match", function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_VECTORED,
+        }
+        local scratch = db:makeScratch()
+        assert.has_error(function()
+            db:scan('aaa', scratch)
+        end)
+    end)
+
 end)
