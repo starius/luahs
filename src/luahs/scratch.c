@@ -47,7 +47,6 @@ static int clone_scratch(lua_State* L) {
     return 1;
 }
 
-
 static const luaL_Reg scratch_mt_funcs[] = {
     {"__gc", free_scratch},
     {}
