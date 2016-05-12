@@ -1,5 +1,5 @@
 // luahs, Lua bindings to hyperscan
-// Copyright (C) 2015 Boris Nagaev
+// Copyright (C) 2016 Boris Nagaev
 // See the LICENSE file for terms of use.
 
 #ifndef LUA_HS_H_
