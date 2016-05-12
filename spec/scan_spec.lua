@@ -63,4 +63,20 @@ describe("scan", function()
         end)
     end)
 
+    it("scans in vectored mode", function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_VECTORED,
+        }
+        local scratch = db:makeScratch()
+        assert.same({
+            {id=0, from=0, to=3},
+        }, db:scan({'aa', 'a'}, scratch))
+        assert.same({}, db:scan({'bbb'}, scratch))
+        assert.same({
+            {id=0, from=0, to=3},
+            {id=0, from=0, to=4},
+        }, db:scan({'', 'a', '', 'aaa', ''}, scratch))
+    end)
+
 end)

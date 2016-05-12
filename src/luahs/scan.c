@@ -33,8 +33,6 @@ static int luahs_match_event_handler(
 
 int scanAgainstDatabase(lua_State* L) {
     Database* db = luaL_checkudata(L, 1, DATABASE_MT);
-    size_t length;
-    const char* data = luaL_checklstring(L, 2, &length);
     Scratch* scratch = luaL_checkudata(L, 3, SCRATCH_MT);
     lua_newtable(L);
     int results_table = lua_gettop(L);
@@ -44,15 +42,52 @@ int scanAgainstDatabase(lua_State* L) {
         .nresults = 0,
     };
     int flags; // unused
-    hs_error_t err = hs_scan(
-        db->db,
-        data,
-        length,
-        flags,
-        scratch->scratch,
-        luahs_match_event_handler,
-        &match_context
-    );
+    int data_type = lua_type(L, 2);
+    hs_error_t err;
+    if (data_type == LUA_TSTRING) {
+        size_t length;
+        const char* data = luaL_checklstring(L, 2, &length);
+        err = hs_scan(
+            db->db,
+            data,
+            length,
+            flags,
+            scratch->scratch,
+            luahs_match_event_handler,
+            &match_context
+        );
+    } else if (data_type == LUA_TTABLE) {
+        int count = compat_rawlen(L, 2);
+        size_t item_size = sizeof(const char*) + sizeof(unsigned int);
+        void* items = lua_newuserdata(L, count * item_size);
+        const char** data = items;
+        unsigned int* length = (unsigned int*)(data + count);
+        int i;
+        for (i = 0; i < count; i++) {
+            lua_rawgeti(L, 2, i + 1);
+            size_t len;
+            data[i] = luaL_checklstring(L, -1, &len);
+            length[i] = (int)len;
+            lua_pop(L, 1);
+        }
+        err = hs_scan_vector(
+            db->db,
+            data,
+            length,
+            count,
+            flags,
+            scratch->scratch,
+            luahs_match_event_handler,
+            &match_context
+        );
+        lua_pop(L, 1); // items
+    } else {
+        return luaL_error(
+            L,
+            "Bad type of 'data': %s",
+            lua_typename(L, data_type)
+        );
+    }
     if (err != HS_SUCCESS) {
         return luaL_error(L, errorToString(err));
     }
