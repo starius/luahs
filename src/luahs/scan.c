@@ -41,7 +41,7 @@ int scanAgainstDatabase(lua_State* L) {
         .results_table = results_table,
         .nresults = 0,
     };
-    int flags; // unused
+    int flags = 0; // unused
     int data_type = lua_type(L, 2);
     hs_error_t err;
     if (data_type == LUA_TSTRING) {
