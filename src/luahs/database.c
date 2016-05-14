@@ -50,6 +50,7 @@ static const luaL_Reg database_methods[] = {
     {"info", database_info},
     {"serialize", database_serialize},
     {"makeScratch", makeScratch},
+    {"makeStream", makeStream},
     {"scan", scanAgainstDatabase},
     {}
 };

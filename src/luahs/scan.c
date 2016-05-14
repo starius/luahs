@@ -93,3 +93,56 @@ int scanAgainstDatabase(lua_State* L) {
     }
     return 1;
 }
+
+int scanAgainstStream(lua_State* L) {
+    Stream* stream = luaL_checkudata(L, 1, STREAM_MT);
+    size_t length;
+    const char* data = luaL_checklstring(L, 2, &length);
+    Scratch* scratch = luaL_checkudata(L, 3, SCRATCH_MT);
+    lua_newtable(L);
+    int results_table = lua_gettop(L);
+    MatchContext match_context = {
+        .L = L,
+        .results_table = results_table,
+        .nresults = 0,
+    };
+    int flags = 0; // unused
+    hs_error_t err = hs_scan_stream(
+        stream->stream,
+        data,
+        length,
+        flags,
+        scratch->scratch,
+        luahs_match_event_handler,
+        &match_context
+    );
+    if (err != HS_SUCCESS) {
+        return luaL_error(L, errorToString(err));
+    }
+    return 1;
+}
+
+int closeStream(lua_State* L) {
+    Stream* stream = luaL_checkudata(L, 1, STREAM_MT);
+    Scratch* scratch = luaL_checkudata(L, 2, SCRATCH_MT);
+    lua_newtable(L);
+    int results_table = lua_gettop(L);
+    MatchContext match_context = {
+        .L = L,
+        .results_table = results_table,
+        .nresults = 0,
+    };
+    hs_error_t err = hs_close_stream(
+        stream->stream,
+        scratch->scratch,
+        luahs_match_event_handler,
+        &match_context
+    );
+    if (err != HS_SUCCESS) {
+        return luaL_error(L, errorToString(err));
+    }
+    stream->stream = NULL;
+    luaL_unref(L, LUA_REGISTRYINDEX, stream->db_ref);
+    stream->db_ref = LUA_NOREF;
+    return 1;
+}
