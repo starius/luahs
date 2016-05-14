@@ -63,6 +63,17 @@ describe("compilation", function()
         }
     end)
 
+    it("specify multiple modes", function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = {
+                luahs.compile_mode.HS_MODE_STREAM,
+                luahs.compile_mode.HS_MODE_SOM_HORIZON_LARGE,
+            },
+            flags = HS_FLAG_SOM_LEFTMOST,
+        }
+    end)
+
     it("compiles multiple patterns", function()
         local db = luahs.compile {
             expressions = {

@@ -50,18 +50,7 @@ static int toFlags(lua_State* L, int index, const char* name) {
 }
 
 static int toMode(lua_State* L, int index) {
-    int mode;
-    int mode_type = lua_type(L, index);
-    if (mode_type == LUA_TNUMBER) {
-        mode = luaL_checkinteger(L, index);
-    } else {
-        return luaL_error(
-            L,
-            "Bad type of 'mode': %s",
-            lua_typename(L, mode_type)
-        );
-    }
-    return mode;
+    return toFlags(L, index, "mode");
 }
 
 static const hs_platform_info_t* toPlatform(
