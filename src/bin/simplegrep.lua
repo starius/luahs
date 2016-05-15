@@ -29,6 +29,7 @@ end
 
 local db = luahs.compile {
     expression = pattern,
+    flags = luahs.pattern_flags.HS_FLAG_DOTALL,
     mode = getMode()
 }
 local scratch = db:makeScratch()
