@@ -7,9 +7,6 @@ local luahs = require 'luahs'
 describe("simplegrep.lua", function()
 
     it("look for expression in file", function()
-        local f = io.popen('lua src/bin/simplegrep.lua dis LICENSE', 'r')
-        local observed = f:read('*a')
-        f:close()
         local expected = [[
 Scanning 1475 bytes with Hyperscan
 Match for pattern "dis" at offset 60
@@ -19,7 +16,13 @@ Match for pattern "dis" at offset 336
 Match for pattern "dis" at offset 452
 Match for pattern "dis" at offset 527
 ]]
-        assert.equal(expected, observed)
+        for _, stream in ipairs{"", "--stream"} do
+            local cmd = 'lua src/bin/simplegrep.lua dis LICENSE ' .. stream
+            local f = io.popen(cmd, 'r')
+            local observed = f:read('*a')
+            f:close()
+            assert.equal(expected, observed)
+        end
     end)
 
 end)
