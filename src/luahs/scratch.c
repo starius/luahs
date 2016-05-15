@@ -15,6 +15,22 @@ static int free_scratch(lua_State* L) {
     return 0;
 }
 
+static int scratch_tostring(lua_State* L) {
+    Scratch* self = luaL_checkudata(L, 1, SCRATCH_MT);
+    size_t size;
+    hs_error_t err = hs_scratch_size(self->scratch, &size);
+    if (err != HS_SUCCESS) {
+        return luaL_error(L, errorToString(err));
+    }
+    lua_pushfstring(
+        L,
+        "Hyperscan scratch (%p) of size %d",
+        self->scratch,
+        (int)size
+    );
+    return 1;
+}
+
 static int scratch_size(lua_State* L) {
     Scratch* self = luaL_checkudata(L, 1, SCRATCH_MT);
     size_t size;
@@ -49,6 +65,7 @@ static int clone_scratch(lua_State* L) {
 
 static const luaL_Reg scratch_mt_funcs[] = {
     {"__gc", free_scratch},
+    {"__tostring", scratch_tostring},
     {}
 };
 

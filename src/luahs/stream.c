@@ -20,6 +20,16 @@ static int free_stream(lua_State* L) {
     return 0;
 }
 
+static int stream_tostring(lua_State* L) {
+    Stream* self = luaL_checkudata(L, 1, STREAM_MT);
+    lua_pushfstring(
+        L,
+        "Hyperscan stream (%p)",
+        self->stream
+    );
+    return 1;
+}
+
 static int clone_stream(lua_State* L) {
     Stream* self = luaL_checkudata(L, 1, STREAM_MT);
     Stream* copy = createStream(L);
@@ -40,6 +50,7 @@ static int getDatabase(lua_State* L) {
 
 static const luaL_Reg stream_mt_funcs[] = {
     {"__gc", free_stream},
+    {"__tostring", stream_tostring},
     {}
 };
 

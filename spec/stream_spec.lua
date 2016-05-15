@@ -6,6 +6,16 @@ local luahs = require 'luahs'
 
 describe("stream", function()
 
+    it("get description of the stream as string", function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_STREAM,
+        }
+        local scratch = db:makeScratch()
+        local stream = db:makeStream()
+        assert.truthy(tostring(stream):match('^Hyperscan stream'))
+    end)
+
     it("scans simple expression in stream mode", function()
         local db = luahs.compile {
             expression = 'aaa',

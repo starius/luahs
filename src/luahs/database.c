@@ -27,6 +27,23 @@ static int database_info(lua_State* L) {
     return 1;
 }
 
+static int database_tostring(lua_State* L) {
+    Database* self = luaL_checkudata(L, 1, DATABASE_MT);
+    char* info;
+    hs_error_t err = hs_database_info(self->db, &info);
+    if (err != HS_SUCCESS) {
+        return luaL_error(L, errorToString(err));
+    }
+    lua_pushfstring(
+        L,
+        "Hyperscan database (%p): %s",
+        self->db,
+        info
+    );
+    free(info);
+    return 1;
+}
+
 static int database_serialize(lua_State* L) {
     Database* self = luaL_checkudata(L, 1, DATABASE_MT);
     char* bytes;
@@ -42,7 +59,7 @@ static int database_serialize(lua_State* L) {
 
 static const luaL_Reg database_mt_funcs[] = {
     {"__gc", free_database},
-    {"__tostring", database_info},
+    {"__tostring", database_tostring},
     {}
 };
 

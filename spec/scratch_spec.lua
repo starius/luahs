@@ -30,6 +30,11 @@ describe("scratch", function()
         assert.truthy(size > 0)
     end)
 
+    it("get description of the scratch as string", function()
+        local scratch = db:makeScratch()
+        assert.truthy(tostring(scratch):match('^Hyperscan scratch'))
+    end)
+
     it("grow scratch", function()
         local scratch = db:makeScratch()
         local size = scratch:size()

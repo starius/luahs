@@ -13,8 +13,8 @@ describe("database", function()
         }
         local info = db:info()
         local as_string = tostring(db)
-        assert.equal(info, as_string)
-        assert.truthy(as_string:match('Version'))
+        assert.truthy(info:match('Version'))
+        assert.truthy(as_string:match('^Hyperscan database'))
     end)
 
     it("serializes and deserializes database", function()
