@@ -2,15 +2,15 @@
 // Copyright (C) 2016 Boris Nagaev
 // See the LICENSE file for terms of use.
 
-#include <string.h>
+#include <string.h> // memset
 
 #include "luahs.h"
 
-static int current_platform(lua_State* L) {
+static int luahs_currentPlatform(lua_State* L) {
     hs_platform_info_t plat;
     hs_error_t err = hs_populate_platform(&plat);
     if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
+        return luaL_error(L, luahs_errorToString(err));
     }
     lua_createtable(L, 0, 4);
     lua_pushinteger(L, plat.tune);
@@ -24,7 +24,7 @@ static int current_platform(lua_State* L) {
     return 1;
 }
 
-static int toFlags(lua_State* L, int index, const char* name) {
+static int luahs_toFlags(lua_State* L, int index, const char* name) {
     // flags can be provided as integer or as a table of integers
     int flags = 0;
     int flags_type = lua_type(L, index);
@@ -32,7 +32,7 @@ static int toFlags(lua_State* L, int index, const char* name) {
         flags = luaL_checkinteger(L, index);
     } else if (flags_type == LUA_TTABLE) {
         flags = 0;
-        int flast_length = compat_rawlen(L, index);
+        int flast_length = luahs_rawlen(L, index);
         int i;
         for (i = 0; i < flast_length; i++) {
             lua_rawgeti(L, index, i + 1);
@@ -49,11 +49,11 @@ static int toFlags(lua_State* L, int index, const char* name) {
     return flags;
 }
 
-static int toMode(lua_State* L, int index) {
-    return toFlags(L, index, "mode");
+static int luahs_toMode(lua_State* L, int index) {
+    return luahs_toFlags(L, index, "mode");
 }
 
-static const hs_platform_info_t* toPlatform(
+static const hs_platform_info_t* luahs_toPlatform(
     lua_State* L,
     int index,
     hs_platform_info_t* space
@@ -63,19 +63,19 @@ static const hs_platform_info_t* toPlatform(
     if (platform_type == LUA_TTABLE) {
         platform = space;
         lua_getfield(L, index, "tune");
-        platform->tune = toFlags(L, -1, "tune");
+        platform->tune = luahs_toFlags(L, -1, "tune");
         lua_pop(L, 1);
         //
         lua_getfield(L, index, "cpu_features");
-        platform->cpu_features = toFlags(L, -1, "cpu_features");
+        platform->cpu_features = luahs_toFlags(L, -1, "cpu_features");
         lua_pop(L, 1);
         //
         lua_getfield(L, index, "reserved1");
-        platform->reserved1 = toFlags(L, -1, "reserved1");
+        platform->reserved1 = luahs_toFlags(L, -1, "reserved1");
         lua_pop(L, 1);
         //
         lua_getfield(L, index, "reserved2");
-        platform->reserved2 = toFlags(L, -1, "reserved2");
+        platform->reserved2 = luahs_toFlags(L, -1, "reserved2");
         lua_pop(L, 1);
     } else if (platform_type != LUA_TNIL) {
         luaL_error(
@@ -88,23 +88,23 @@ static const hs_platform_info_t* toPlatform(
     return platform;
 }
 
-typedef lua_Integer (*FilterFunction) (lua_State *L, int index);
+typedef lua_Integer (*luahs_FilterFunction) (lua_State *L, int index);
 
-static lua_Integer toFlagsInMulti(lua_State* L, int index) {
-    return toFlags(L, index, "flags");
+static lua_Integer luahs_toFlagsInMulti(lua_State* L, int index) {
+    return luahs_toFlags(L, index, "flags");
 }
 
-static int getIntegerField(
+static int luahs_getIntegerField(
     lua_State* L,
     const char* field_name,
     int* result,
-    FilterFunction filter
+    luahs_FilterFunction filter
 ) {
     lua_getfield(L, -1, field_name);
     int id_type = lua_type(L, -1);
     int has_field = 0;
     if (id_type == LUA_TNUMBER ||
-            (filter == toFlagsInMulti && id_type == LUA_TTABLE)) {
+            (filter == luahs_toFlagsInMulti && id_type == LUA_TTABLE)) {
         *result = filter(L, -1);
         has_field = 1;
     } else if (id_type != LUA_TNIL) {
@@ -119,15 +119,15 @@ static int getIntegerField(
     return has_field;
 }
 
-static hs_error_t compileMulti(
+static hs_error_t luahs_compileMulti(
     lua_State* L,
-    Database* self,
+    luahs_Database* self,
     unsigned int mode,
     const hs_platform_info_t* platform,
     hs_compile_error_t** compile_err
 ) {
     luaL_checktype(L, -1, LUA_TTABLE);
-    int nelements = compat_rawlen(L, -1);
+    int nelements = luahs_rawlen(L, -1);
     const char** expressions = lua_newuserdata(
         L,
         nelements * sizeof(const char*)
@@ -169,14 +169,14 @@ static hs_error_t compileMulti(
             lua_pop(L, 1);
             // integer fields
             int id;
-            if (getIntegerField(L, "id", &id, luaL_checkinteger)) {
+            if (luahs_getIntegerField(L, "id", &id, luaL_checkinteger)) {
                 if (!ids) {
                     ids = ids_space;
                 }
                 ids[i] = id;
             }
             int flags;
-            if (getIntegerField(L, "flags", &flags, toFlagsInMulti)) {
+            if (luahs_getIntegerField(L, "flags", &flags, luahs_toFlagsInMulti)) {
                 if (!flagss) {
                     flagss = flagss_space;
                 }
@@ -185,13 +185,13 @@ static hs_error_t compileMulti(
             // extended flags
             unsigned long long ext_flags = 0;
             int min_offset, max_offset, min_length;
-            if (getIntegerField(L, "min_offset", &min_offset, luaL_checkinteger)) {
+            if (luahs_getIntegerField(L, "min_offset", &min_offset, luaL_checkinteger)) {
                 ext_flags |= HS_EXT_FLAG_MIN_OFFSET;
             }
-            if (getIntegerField(L, "max_offset", &max_offset, luaL_checkinteger)) {
+            if (luahs_getIntegerField(L, "max_offset", &max_offset, luaL_checkinteger)) {
                 ext_flags |= HS_EXT_FLAG_MAX_OFFSET;
             }
-            if (getIntegerField(L, "min_length", &min_length, luaL_checkinteger)) {
+            if (luahs_getIntegerField(L, "min_length", &min_length, luaL_checkinteger)) {
                 ext_flags |= HS_EXT_FLAG_MIN_LENGTH;
             }
             if (ext_flags) {
@@ -247,7 +247,7 @@ static hs_error_t compileMulti(
     return err;
 }
 
-static int throwCompileError(
+static int luahs_throwCompileError(
     lua_State* L,
     hs_compile_error_t* compile_err
 ) {
@@ -269,19 +269,19 @@ static int throwCompileError(
     return lua_error(L);
 }
 
-static int compile(lua_State* L) {
+static int luahs_compile(lua_State* L) {
     luaL_checktype(L, 1, LUA_TTABLE);
     // mode
     lua_getfield(L, 1, "mode");
-    unsigned int mode = toMode(L, -1);
+    unsigned int mode = luahs_toMode(L, -1);
     lua_pop(L, 1);
     // platform
     lua_getfield(L, 1, "platform");
     hs_platform_info_t space;
-    const hs_platform_info_t* platform = toPlatform(L, -1, &space);
+    const hs_platform_info_t* platform = luahs_toPlatform(L, -1, &space);
     lua_pop(L, 1);
     // create userdata
-    Database* self = createDatabase(L);
+    luahs_Database* self = luahs_createDatabase(L);
     int result = lua_gettop(L);
     // compile
     hs_compile_error_t* compile_err;
@@ -294,7 +294,7 @@ static int compile(lua_State* L) {
             const char* expression = luaL_checkstring(L, -1);
             // flags
             lua_getfield(L, 1, "flags");
-            unsigned int flags = toFlags(L, -1, "flags");
+            unsigned int flags = luahs_toFlags(L, -1, "flags");
             lua_pop(L, 1);
             err = hs_compile(
                 expression,
@@ -312,7 +312,7 @@ static int compile(lua_State* L) {
         // multiple expressions
         lua_getfield(L, 1, "expressions");
         if (lua_type(L, -1) != LUA_TNIL) {
-            err = compileMulti(L, self, mode, platform, &compile_err);
+            err = luahs_compileMulti(L, self, mode, platform, &compile_err);
             compiled = 1;
         }
         lua_pop(L, 1);
@@ -321,18 +321,18 @@ static int compile(lua_State* L) {
         return luaL_error(L, "Specify 'expression' or 'expressions'");
     }
     if (err != HS_SUCCESS) {
-        return throwCompileError(L, compile_err);
+        return luahs_throwCompileError(L, compile_err);
     }
     lua_pushvalue(L, result);
     return 1;
 }
 
-static int expression_info(lua_State* L) {
+static int luahs_expressionInfo(lua_State* L) {
     int nargs = lua_gettop(L);
     const char* expression = luaL_checkstring(L, 1);
     unsigned int flags = 0;
     if (nargs >= 2) {
-        flags = toFlags(L, 2, "flags");
+        flags = luahs_toFlags(L, 2, "flags");
     }
     hs_expr_info_t* info;
     hs_compile_error_t* compile_err;
@@ -343,7 +343,7 @@ static int expression_info(lua_State* L) {
         &compile_err
     );
     if (err != HS_SUCCESS) {
-        return throwCompileError(L, compile_err);
+        return luahs_throwCompileError(L, compile_err);
     }
     lua_createtable(L, 0, 4);
     lua_pushinteger(L, info->min_width);
@@ -360,15 +360,13 @@ static int expression_info(lua_State* L) {
     return 1;
 }
 
-#define ITEM(c) {#c, c}
-
-static luaL_Reg functions[] = {
-    ITEM(compile),
-    ITEM(expression_info),
-    ITEM(current_platform),
+static luaL_Reg luahs_functions[] = {
+    {"compile", luahs_compile},
+    {"expressionInfo", luahs_expressionInfo},
+    {"currentPlatform", luahs_currentPlatform},
     {}
 };
 
-void addCompile(lua_State* L) {
-    compat_setfuncs(L, functions);
+void luahs_addCompile(lua_State* L) {
+    luahs_setfuncs(L, luahs_functions);
 }

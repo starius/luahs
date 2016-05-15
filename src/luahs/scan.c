@@ -2,8 +2,6 @@
 // Copyright (C) 2016 Boris Nagaev
 // See the LICENSE file for terms of use.
 
-#include <string.h>
-
 #include "luahs.h"
 
 static int luahs_match_event_handler(
@@ -13,7 +11,7 @@ static int luahs_match_event_handler(
     unsigned int flags,
     void* context
 ) {
-    MatchContext* match_context = (MatchContext*)context;
+    luahs_MatchContext* match_context = (luahs_MatchContext*)context;
     lua_State* L = match_context->L;
     lua_createtable(L, 0, 3);
     lua_pushinteger(L, id);
@@ -31,12 +29,12 @@ static int luahs_match_event_handler(
     return 0;
 }
 
-int scanAgainstDatabase(lua_State* L) {
-    Database* db = luaL_checkudata(L, 1, DATABASE_MT);
-    Scratch* scratch = luaL_checkudata(L, 3, SCRATCH_MT);
+int luahs_scanAgainstDatabase(lua_State* L) {
+    luahs_Database* db = luaL_checkudata(L, 1, LUAHS_DATABASE_MT);
+    luahs_Scratch* scratch = luaL_checkudata(L, 3, LUAHS_SCRATCH_MT);
     lua_newtable(L);
     int results_table = lua_gettop(L);
-    MatchContext match_context = {
+    luahs_MatchContext match_context = {
         .L = L,
         .results_table = results_table,
         .nresults = 0,
@@ -57,7 +55,7 @@ int scanAgainstDatabase(lua_State* L) {
             &match_context
         );
     } else if (data_type == LUA_TTABLE) {
-        int count = compat_rawlen(L, 2);
+        int count = luahs_rawlen(L, 2);
         size_t item_size = sizeof(const char*) + sizeof(unsigned int);
         void* items = lua_newuserdata(L, count * item_size);
         const char** data = items;
@@ -89,19 +87,19 @@ int scanAgainstDatabase(lua_State* L) {
         );
     }
     if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
+        return luaL_error(L, luahs_errorToString(err));
     }
     return 1;
 }
 
-int scanAgainstStream(lua_State* L) {
-    Stream* stream = luaL_checkudata(L, 1, STREAM_MT);
+int luahs_scanAgainstStream(lua_State* L) {
+    luahs_Stream* stream = luaL_checkudata(L, 1, LUAHS_STREAM_MT);
     size_t length;
     const char* data = luaL_checklstring(L, 2, &length);
-    Scratch* scratch = luaL_checkudata(L, 3, SCRATCH_MT);
+    luahs_Scratch* scratch = luaL_checkudata(L, 3, LUAHS_SCRATCH_MT);
     lua_newtable(L);
     int results_table = lua_gettop(L);
-    MatchContext match_context = {
+    luahs_MatchContext match_context = {
         .L = L,
         .results_table = results_table,
         .nresults = 0,
@@ -117,17 +115,17 @@ int scanAgainstStream(lua_State* L) {
         &match_context
     );
     if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
+        return luaL_error(L, luahs_errorToString(err));
     }
     return 1;
 }
 
-int closeStream(lua_State* L) {
-    Stream* stream = luaL_checkudata(L, 1, STREAM_MT);
-    Scratch* scratch = luaL_checkudata(L, 2, SCRATCH_MT);
+int luahs_closeStream(lua_State* L) {
+    luahs_Stream* stream = luaL_checkudata(L, 1, LUAHS_STREAM_MT);
+    luahs_Scratch* scratch = luaL_checkudata(L, 2, LUAHS_SCRATCH_MT);
     lua_newtable(L);
     int results_table = lua_gettop(L);
-    MatchContext match_context = {
+    luahs_MatchContext match_context = {
         .L = L,
         .results_table = results_table,
         .nresults = 0,
@@ -139,7 +137,7 @@ int closeStream(lua_State* L) {
         &match_context
     );
     if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
+        return luaL_error(L, luahs_errorToString(err));
     }
     stream->stream = NULL;
     luaL_unref(L, LUA_REGISTRYINDEX, stream->db_ref);

@@ -4,19 +4,19 @@
 
 #include "luahs.h"
 
-typedef struct Constant {
+typedef struct luahs_Constant {
     const char* name;
     int value;
-} Constant;
+} luahs_Constant;
 
-typedef struct Namespace {
+typedef struct luahs_Namespace {
     const char* name;
-    const Constant* constants;
-} Namespace;
+    const luahs_Constant* constants;
+} luahs_Namespace;
 
 #define ITEM(c) {#c, c}
 
-static const Constant errors[] = {
+static const luahs_Constant luahs_errors[] = {
     ITEM(HS_SUCCESS),
     ITEM(HS_INVALID),
     ITEM(HS_NOMEM),
@@ -30,14 +30,14 @@ static const Constant errors[] = {
     {},
 };
 
-static const Constant extended_parameters[] = {
+static const luahs_Constant luahs_extended_parameters[] = {
     ITEM(HS_EXT_FLAG_MIN_OFFSET),
     ITEM(HS_EXT_FLAG_MAX_OFFSET),
     ITEM(HS_EXT_FLAG_MIN_LENGTH),
     {},
 };
 
-static const Constant pattern_flags[] = {
+static const luahs_Constant luahs_pattern_flags[] = {
     ITEM(HS_FLAG_CASELESS),
     ITEM(HS_FLAG_DOTALL),
     ITEM(HS_FLAG_MULTILINE),
@@ -50,12 +50,12 @@ static const Constant pattern_flags[] = {
     {},
 };
 
-static const Constant cpu_features[] = {
+static const luahs_Constant luahs_cpu_features[] = {
     ITEM(HS_CPU_FEATURES_AVX2),
     {},
 };
 
-static const Constant cpu_tuning[] = {
+static const luahs_Constant luahs_cpu_tuning[] = {
     ITEM(HS_TUNE_FAMILY_GENERIC),
     ITEM(HS_TUNE_FAMILY_SNB),
     ITEM(HS_TUNE_FAMILY_IVB),
@@ -65,7 +65,7 @@ static const Constant cpu_tuning[] = {
     {},
 };
 
-static const Constant compile_mode[] = {
+static const luahs_Constant luahs_compile_mode[] = {
     ITEM(HS_MODE_BLOCK),
     ITEM(HS_MODE_NOSTREAM),
     ITEM(HS_MODE_STREAM),
@@ -76,21 +76,26 @@ static const Constant compile_mode[] = {
     {},
 };
 
-static const Namespace namespaces[] = {
-    ITEM(errors),
-    ITEM(extended_parameters),
-    ITEM(pattern_flags),
-    ITEM(cpu_features),
-    ITEM(cpu_tuning),
-    ITEM(compile_mode),
-    {},
-};
-
 #undef ITEM
 
-static void pushConstants(lua_State* L, const Constant* constants) {
+#define NAMESPACE(c) {#c, luahs_ ## c}
+static const luahs_Namespace luahs_namespaces[] = {
+    NAMESPACE(errors),
+    NAMESPACE(extended_parameters),
+    NAMESPACE(pattern_flags),
+    NAMESPACE(cpu_features),
+    NAMESPACE(cpu_tuning),
+    NAMESPACE(compile_mode),
+    {},
+};
+#undef NAMESPACE
+
+static void luahs_pushConstants(
+    lua_State* L,
+    const luahs_Constant* constants
+) {
     int length = 0;
-    const Constant* it;
+    const luahs_Constant* it;
     // determine length
     for (it = constants; it->name != NULL; it++) {
         length += 1;
@@ -103,12 +108,12 @@ static void pushConstants(lua_State* L, const Constant* constants) {
     }
 }
 
-typedef struct Error {
+typedef struct luahs_Error {
     hs_error_t code;
     const char* name;
-} Error;
+} luahs_Error;
 
-static const Error error_messages[] = {
+static const luahs_Error luahs_error_messages[] = {
     {HS_SUCCESS, "The engine completed normally."},
     {HS_INVALID, "A parameter passed to this function was invalid."},
     {HS_NOMEM, "A memory allocation failed."},
@@ -129,9 +134,9 @@ static const Error error_messages[] = {
     {},
 };
 
-const char* errorToString(hs_error_t error) {
-    const Error* it;
-    for (it = error_messages; it->name != NULL; it++) {
+const char* luahs_errorToString(hs_error_t error) {
+    const luahs_Error* it;
+    for (it = luahs_error_messages; it->name != NULL; it++) {
         if (error == it->code) {
             return it->name;
         }
@@ -139,20 +144,20 @@ const char* errorToString(hs_error_t error) {
     return "Unknown error.";
 }
 
-static int decode_error(lua_State* L) {
+static int luahs_decodeError(lua_State* L) {
     int err = luaL_checkinteger(L, 1);
-    lua_pushstring(L, errorToString(err));
+    lua_pushstring(L, luahs_errorToString(err));
     return 1;
 }
 
-void addConstants(lua_State* L) {
-    const Namespace* it;
-    for (it = namespaces; it->name != NULL; it++) {
-        pushConstants(L, it->constants);
+void luahs_addConstants(lua_State* L) {
+    const luahs_Namespace* it;
+    for (it = luahs_namespaces; it->name != NULL; it++) {
+        luahs_pushConstants(L, it->constants);
         lua_setfield(L, -2, it->name);
     }
-    lua_pushcfunction(L, decode_error);
-    lua_setfield(L, -2, "decode_error");
+    lua_pushcfunction(L, luahs_decodeError);
+    lua_setfield(L, -2, "decodeError");
     lua_pushinteger(L, HS_OFFSET_PAST_HORIZON);
     lua_setfield(L, -2, "HS_OFFSET_PAST_HORIZON");
 }

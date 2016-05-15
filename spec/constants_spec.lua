@@ -16,7 +16,7 @@ describe("constants", function()
     end)
 
     it("decodes constants", function()
-        assert.equal("string", type(luahs.decode_error(0)))
+        assert.equal("string", type(luahs.decodeError(0)))
     end)
 
 end)

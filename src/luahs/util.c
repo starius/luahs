@@ -2,20 +2,18 @@
 // Copyright (C) 2016 Boris Nagaev
 // See the LICENSE file for terms of use.
 
-#include <string.h>
-
 #include "luahs.h"
 
-static int version(lua_State* L) {
+static int luahs_version(lua_State* L) {
     lua_pushstring(L, hs_version());
     return 1;
 }
 
-static const luaL_Reg functions[] = {
-    ITEM(version),
+static const luaL_Reg luahs_functions[] = {
+    {"version", luahs_version},
     {}
 };
 
-void addUtil(lua_State* L) {
-    compat_setfuncs(L, functions);
+void luahs_addUtil(lua_State* L) {
+    luahs_setfuncs(L, luahs_functions);
 }

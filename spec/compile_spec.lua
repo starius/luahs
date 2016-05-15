@@ -13,8 +13,8 @@ describe("compilation", function()
         }
     end)
 
-    it("current_platform", function()
-        local platform = luahs.current_platform()
+    it("current platform", function()
+        local platform = luahs.currentPlatform()
         assert.truthy(platform.tune)
         assert.truthy(platform.cpu_features)
     end)
@@ -40,7 +40,7 @@ describe("compilation", function()
         local db = luahs.compile {
             expression = 'aaa',
             mode = luahs.compile_mode.HS_MODE_BLOCK,
-            platform = luahs.current_platform(),
+            platform = luahs.currentPlatform(),
         }
     end)
 
@@ -131,7 +131,7 @@ describe("compilation", function()
     end)
 
     it("get information about RE", function()
-        local db = luahs.expression_info('aaa?')
+        local db = luahs.expressionInfo('aaa?')
         assert.equal(2, db.min_width)
         assert.equal(3, db.max_width)
     end)

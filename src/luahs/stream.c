@@ -2,16 +2,14 @@
 // Copyright (C) 2016 Boris Nagaev
 // See the LICENSE file for terms of use.
 
-#include <string.h>
-
 #include "luahs.h"
 
-static int free_stream(lua_State* L) {
-    Stream* self = luaL_checkudata(L, 1, STREAM_MT);
+static int luahs_freeStream(lua_State* L) {
+    luahs_Stream* self = luaL_checkudata(L, 1, LUAHS_STREAM_MT);
     if (self->stream) {
         hs_error_t err = hs_close_stream(self->stream, NULL, NULL, NULL);
         if (err != HS_SUCCESS) {
-            return luaL_error(L, errorToString(err));
+            return luaL_error(L, luahs_errorToString(err));
         }
     }
     self->stream = NULL;
@@ -20,8 +18,8 @@ static int free_stream(lua_State* L) {
     return 0;
 }
 
-static int stream_tostring(lua_State* L) {
-    Stream* self = luaL_checkudata(L, 1, STREAM_MT);
+static int luahs_streamToString(lua_State* L) {
+    luahs_Stream* self = luaL_checkudata(L, 1, LUAHS_STREAM_MT);
     lua_pushfstring(
         L,
         "Hyperscan stream (%p)",
@@ -30,60 +28,60 @@ static int stream_tostring(lua_State* L) {
     return 1;
 }
 
-static int clone_stream(lua_State* L) {
-    Stream* self = luaL_checkudata(L, 1, STREAM_MT);
-    Stream* copy = createStream(L);
+static int luahs_cloneStream(lua_State* L) {
+    luahs_Stream* self = luaL_checkudata(L, 1, LUAHS_STREAM_MT);
+    luahs_Stream* copy = luahs_createStream(L);
     hs_error_t err = hs_copy_stream(&copy->stream, self->stream);
     if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
+        return luaL_error(L, luahs_errorToString(err));
     }
     lua_rawgeti(L, LUA_REGISTRYINDEX, self->db_ref);
     copy->db_ref = luaL_ref(L, LUA_REGISTRYINDEX);
     return 1;
 }
 
-static int getDatabase(lua_State* L) {
-    Stream* self = luaL_checkudata(L, 1, STREAM_MT);
+static int luahs_getDatabase(lua_State* L) {
+    luahs_Stream* self = luaL_checkudata(L, 1, LUAHS_STREAM_MT);
     lua_rawgeti(L, LUA_REGISTRYINDEX, self->db_ref);
     return 1;
 }
 
-static const luaL_Reg stream_mt_funcs[] = {
-    {"__gc", free_stream},
-    {"__tostring", stream_tostring},
+static const luaL_Reg luahs_stream_mt_funcs[] = {
+    {"__gc", luahs_freeStream},
+    {"__tostring", luahs_streamToString},
     {}
 };
 
-static const luaL_Reg stream_methods[] = {
-    {"scan", scanAgainstStream},
-    {"clone", clone_stream},
-    {"close", closeStream},
-    {"database", getDatabase},
+static const luaL_Reg luahs_stream_methods[] = {
+    {"scan", luahs_scanAgainstStream},
+    {"clone", luahs_cloneStream},
+    {"close", luahs_closeStream},
+    {"database", luahs_getDatabase},
     {}
 };
 
-Stream* createStream(lua_State* L) {
-    Stream* self = lua_newuserdata(L, sizeof(Stream));
+luahs_Stream* luahs_createStream(lua_State* L) {
+    luahs_Stream* self = lua_newuserdata(L, sizeof(luahs_Stream));
     self->stream = NULL;
     self->db_ref = LUA_NOREF;
-    if (luaL_newmetatable(L, STREAM_MT)) {
+    if (luaL_newmetatable(L, LUAHS_STREAM_MT)) {
         // prepare metatable
-        compat_setfuncs(L, stream_mt_funcs);
+        luahs_setfuncs(L, luahs_stream_mt_funcs);
         lua_newtable(L);
-        compat_setfuncs(L, stream_methods);
+        luahs_setfuncs(L, luahs_stream_methods);
         lua_setfield(L, -2, "__index");
     }
     lua_setmetatable(L, -2);
     return self;
 }
 
-int makeStream(lua_State* L) {
-    Database* db = luaL_checkudata(L, 1, DATABASE_MT);
-    Stream* self = createStream(L);
+int luahs_makeStream(lua_State* L) {
+    luahs_Database* db = luaL_checkudata(L, 1, LUAHS_DATABASE_MT);
+    luahs_Stream* self = luahs_createStream(L);
     int flags = 0;
     hs_error_t err = hs_open_stream(db->db, flags, &self->stream);
     if (err != HS_SUCCESS) {
-        return luaL_error(L, errorToString(err));
+        return luaL_error(L, luahs_errorToString(err));
     }
     lua_pushvalue(L, 1);
     self->db_ref = luaL_ref(L, LUA_REGISTRYINDEX);

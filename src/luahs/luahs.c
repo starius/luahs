@@ -12,11 +12,11 @@
 
 int LUAHS_LUAOPENER(lua_State* L) {
     lua_newtable(L); // module "luahs"
-    addConstants(L);
-    addUtil(L);
+    luahs_addConstants(L);
+    luahs_addUtil(L);
 #ifndef LUAHS_RUNTIME
-    addCompile(L);
+    luahs_addCompile(L);
 #endif
-    addDatabase(L);
+    luahs_addDatabase(L);
     return 1;
 }
