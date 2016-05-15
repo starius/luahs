@@ -61,6 +61,33 @@ describe("scan", function()
         assert.has_error(function()
             db:scan('aaa', scratch)
         end)
+        assert.has_error(function()
+            db:makeStream()
+        end)
+        --
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+        local scratch = db:makeScratch()
+        assert.has_error(function()
+            db:scan({'aaa'}, scratch)
+        end)
+        assert.has_error(function()
+            db:makeStream()
+        end)
+        --
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_STREAM,
+        }
+        local scratch = db:makeScratch()
+        assert.has_error(function()
+            db:scan('aaa', scratch)
+        end)
+        assert.has_error(function()
+            db:scan({'aaa'}, scratch)
+        end)
     end)
 
     it("scans in vectored mode", function()
