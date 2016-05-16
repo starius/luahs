@@ -17,10 +17,6 @@ static int luahs_currentPlatform(lua_State* L) {
     lua_setfield(L, -2, "tune");
     lua_pushinteger(L, plat.cpu_features);
     lua_setfield(L, -2, "cpu_features");
-    lua_pushinteger(L, plat.reserved1);
-    lua_setfield(L, -2, "reserved1");
-    lua_pushinteger(L, plat.reserved2);
-    lua_setfield(L, -2, "reserved2");
     return 1;
 }
 
@@ -68,14 +64,6 @@ static const hs_platform_info_t* luahs_toPlatform(
         //
         lua_getfield(L, index, "cpu_features");
         platform->cpu_features = luahs_toFlags(L, -1, "cpu_features");
-        lua_pop(L, 1);
-        //
-        lua_getfield(L, index, "reserved1");
-        platform->reserved1 = luahs_toFlags(L, -1, "reserved1");
-        lua_pop(L, 1);
-        //
-        lua_getfield(L, index, "reserved2");
-        platform->reserved2 = luahs_toFlags(L, -1, "reserved2");
         lua_pop(L, 1);
     } else if (platform_type != LUA_TNIL) {
         luaL_error(
