@@ -19,6 +19,7 @@ Hyperscan is high-performanceregular expression matching library.
 }
 dependencies = {
     "lua >= 5.1",
+    "argparse",
 }
 external_dependencies = {
     HS = {
