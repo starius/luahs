@@ -57,4 +57,13 @@ describe("database", function()
         end)
     end)
 
+    it("returns info of serialized database", function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+        local data = db:serialize()
+        assert.equal(db:info(), luahs.infoOfDeserialized(data))
+    end)
+
 end)

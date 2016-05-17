@@ -135,9 +135,27 @@ static int luahs_sizeOfDeserialized(lua_State* L) {
     return 1;
 }
 
+static int luahs_infoOfDeserialized(lua_State* L) {
+    size_t length;
+    const char* bytes = luaL_checklstring(L, 1, &length);
+    char* info;
+    hs_error_t err = hs_serialized_database_info(
+        bytes,
+        length,
+        &info
+    );
+    if (err != HS_SUCCESS) {
+        return luaL_error(L, luahs_errorToString(err));
+    }
+    lua_pushstring(L, info);
+    free(info);
+    return 1;
+}
+
 static luaL_Reg luahs_functions[] = {
     {"deserialize", luahs_deserializeDatabase},
     {"sizeOfDeserialized", luahs_sizeOfDeserialized},
+    {"infoOfDeserialized", luahs_infoOfDeserialized},
     {}
 };
 
