@@ -57,6 +57,41 @@ describe("stream", function()
         assert.same({{id=0, from=0, to=3}}, stream:close(scratch))
     end)
 
+    it("assigns stream", function()
+        local db = luahs.compile {
+            expression = 'aaa$',
+            mode = luahs.compile_mode.HS_MODE_STREAM,
+        }
+        local scratch = db:makeScratch()
+        local stream1 = db:makeStream()
+        local stream2 = db:makeStream()
+        assert.same({}, stream1:scan('a', scratch))
+        assert.same({}, stream1:scan('a', scratch))
+        assert.same({}, stream1:scan('a', scratch))
+        assert.same({}, stream2:assign(stream1, scratch))
+        assert.same({{id=0, from=0, to=3}}, stream2:reset(scratch))
+    end)
+
+    it("throws if assign streams of different databases", function()
+        local db1 = luahs.compile {
+            expression = 'aaa$',
+            mode = luahs.compile_mode.HS_MODE_STREAM,
+        }
+        local db2 = luahs.compile {
+            expression = 'aaa$',
+            mode = luahs.compile_mode.HS_MODE_STREAM,
+        }
+        local scratch = db1:makeScratch()
+        local stream1 = db1:makeStream()
+        local stream2 = db2:makeStream()
+        assert.same({}, stream1:scan('a', scratch))
+        assert.same({}, stream1:scan('a', scratch))
+        assert.same({}, stream1:scan('a', scratch))
+        assert.has_error(function()
+            stream2:assign(stream1, scratch)
+        end)
+    end)
+
     it("clones stream", function()
         local db = luahs.compile {
             expression = 'aaa',

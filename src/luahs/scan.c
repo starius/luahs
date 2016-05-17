@@ -168,3 +168,27 @@ int luahs_resetStream(lua_State* L) {
     }
     return 1;
 }
+
+int luahs_assignStream(lua_State* L) {
+    luahs_Stream* to_stream = luaL_checkudata(L, 1, LUAHS_STREAM_MT);
+    luahs_Stream* from_stream = luaL_checkudata(L, 2, LUAHS_STREAM_MT);
+    luahs_Scratch* scratch = luaL_checkudata(L, 3, LUAHS_SCRATCH_MT);
+    lua_newtable(L);
+    int results_table = lua_gettop(L);
+    luahs_MatchContext match_context = {
+        .L = L,
+        .results_table = results_table,
+        .nresults = 0,
+    };
+    hs_error_t err = hs_reset_and_copy_stream(
+        to_stream->stream,
+        from_stream->stream,
+        scratch->scratch,
+        luahs_match_event_handler,
+        &match_context
+    );
+    if (err != HS_SUCCESS) {
+        return luaL_error(L, luahs_errorToString(err));
+    }
+    return 1;
+}

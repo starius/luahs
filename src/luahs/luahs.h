@@ -56,5 +56,6 @@ int luahs_scanAgainstDatabase(lua_State* L);
 int luahs_scanAgainstStream(lua_State* L);
 int luahs_closeStream(lua_State* L);
 int luahs_resetStream(lua_State* L);
+int luahs_assignStream(lua_State* L);
 
 #endif
