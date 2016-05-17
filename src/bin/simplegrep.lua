@@ -49,6 +49,8 @@ if stream_mode then
         local hits = stream:scan(chunk, scratch)
         printHits(hits)
     end
+    local hits = stream:close(scratch)
+    printHits(hits)
 else
     local content = file:read('*a')
     file:close()

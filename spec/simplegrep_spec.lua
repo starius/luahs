@@ -25,4 +25,18 @@ Match for pattern "dis" at offset 527
         end
     end)
 
+    it("look for anchored expression in file", function()
+        local expected = [[
+Scanning 1475 bytes with Hyperscan
+Match for pattern "DAMAGE.$" at offset 1474
+]]
+        for _, stream in ipairs{"", "--stream"} do
+            local cmd = 'lua src/bin/simplegrep.lua "DAMAGE.$" LICENSE ' .. stream
+            local f = io.popen(cmd, 'r')
+            local observed = f:read('*a')
+            f:close()
+            assert.equal(expected, observed)
+        end
+    end)
+
 end)
