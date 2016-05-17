@@ -56,6 +56,7 @@ static const luaL_Reg luahs_stream_methods[] = {
     {"scan", luahs_scanAgainstStream},
     {"clone", luahs_cloneStream},
     {"close", luahs_closeStream},
+    {"reset", luahs_resetStream},
     {"database", luahs_getDatabase},
     {}
 };

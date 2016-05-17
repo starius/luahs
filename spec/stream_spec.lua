@@ -42,6 +42,21 @@ describe("stream", function()
         assert.same({{id=0, from=0, to=3}}, stream:close(scratch))
     end)
 
+    it("resets stream", function()
+        local db = luahs.compile {
+            expression = 'aaa$',
+            mode = luahs.compile_mode.HS_MODE_STREAM,
+        }
+        local scratch = db:makeScratch()
+        local stream = db:makeStream()
+        assert.same({}, stream:scan('a', scratch))
+        assert.same({}, stream:scan('a', scratch))
+        assert.same({}, stream:scan('a', scratch))
+        assert.same({{id=0, from=0, to=3}}, stream:reset(scratch))
+        assert.same({}, stream:scan('aaa', scratch))
+        assert.same({{id=0, from=0, to=3}}, stream:close(scratch))
+    end)
+
     it("clones stream", function()
         local db = luahs.compile {
             expression = 'aaa',
