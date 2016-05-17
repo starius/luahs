@@ -55,6 +55,17 @@ static int luahs_serializeDatabase(lua_State* L) {
     return 1;
 }
 
+static int luahs_databaseSize(lua_State* L) {
+    luahs_Database* self = luaL_checkudata(L, 1, LUAHS_DATABASE_MT);
+    size_t database_size;
+    hs_error_t err = hs_database_size(self->db, &database_size);
+    if (err != HS_SUCCESS) {
+        return luaL_error(L, luahs_errorToString(err));
+    }
+    lua_pushinteger(L, (int)database_size);
+    return 1;
+}
+
 static const luaL_Reg luahs_database_mt_funcs[] = {
     {"__gc", luahs_freeDatabase},
     {"__tostring", luahs_databaseToString},
@@ -64,6 +75,7 @@ static const luaL_Reg luahs_database_mt_funcs[] = {
 static const luaL_Reg luahs_database_methods[] = {
     {"info", luahs_databaseInfo},
     {"serialize", luahs_serializeDatabase},
+    {"size", luahs_databaseSize},
     {"makeScratch", luahs_makeScratch},
     {"makeStream", luahs_makeStream},
     {"scan", luahs_scanAgainstDatabase},
@@ -95,8 +107,25 @@ static int luahs_deserializeDatabase(lua_State* L) {
     return 1;
 }
 
+static int luahs_sizeOfDeserialized(lua_State* L) {
+    size_t length;
+    const char* bytes = luaL_checklstring(L, 1, &length);
+    size_t deserialized_size;
+    hs_error_t err = hs_serialized_database_size(
+        bytes,
+        length,
+        &deserialized_size
+    );
+    if (err != HS_SUCCESS) {
+        return luaL_error(L, luahs_errorToString(err));
+    }
+    lua_pushinteger(L, (int)deserialized_size);
+    return 1;
+}
+
 static luaL_Reg luahs_functions[] = {
     {"deserialize", luahs_deserializeDatabase},
+    {"sizeOfDeserialized", luahs_sizeOfDeserialized},
     {}
 };
 

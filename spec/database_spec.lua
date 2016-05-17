@@ -29,4 +29,13 @@ describe("database", function()
         assert.equal(db:serialize(), db1:serialize())
     end)
 
+    it("returns size of database in bytes", function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+        local data = db:serialize()
+        assert.equal(db:size(), luahs.sizeOfDeserialized(data))
+    end)
+
 end)
