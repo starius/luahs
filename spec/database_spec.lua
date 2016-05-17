@@ -38,4 +38,23 @@ describe("database", function()
         assert.equal(db:size(), luahs.sizeOfDeserialized(data))
     end)
 
+    it("returns size of stream in bytes", function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_STREAM,
+        }
+        assert.truthy(db:streamSize() > 0)
+    end)
+
+    it("streamSize() throws if database is not in stream mode",
+    function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+        assert.has_error(function()
+            db:streamSize()
+        end)
+    end)
+
 end)

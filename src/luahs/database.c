@@ -66,6 +66,17 @@ static int luahs_databaseSize(lua_State* L) {
     return 1;
 }
 
+static int luahs_streamSize(lua_State* L) {
+    luahs_Database* self = luaL_checkudata(L, 1, LUAHS_DATABASE_MT);
+    size_t stream_size;
+    hs_error_t err = hs_stream_size(self->db, &stream_size);
+    if (err != HS_SUCCESS) {
+        return luaL_error(L, luahs_errorToString(err));
+    }
+    lua_pushinteger(L, (int)stream_size);
+    return 1;
+}
+
 static const luaL_Reg luahs_database_mt_funcs[] = {
     {"__gc", luahs_freeDatabase},
     {"__tostring", luahs_databaseToString},
@@ -76,6 +87,7 @@ static const luaL_Reg luahs_database_methods[] = {
     {"info", luahs_databaseInfo},
     {"serialize", luahs_serializeDatabase},
     {"size", luahs_databaseSize},
+    {"streamSize", luahs_streamSize},
     {"makeScratch", luahs_makeScratch},
     {"makeStream", luahs_makeStream},
     {"scan", luahs_scanAgainstDatabase},
