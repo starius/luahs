@@ -48,12 +48,16 @@ before_install:
 
   # Lua
   - pip install hererocks
+  - pip install cpp-coveralls
   - hererocks here --$LUA --luarocks "2.2"
   - export PATH=$PATH:$PWD/here/bin
   - luarocks install busted
 
 install:
-  - luarocks make HS_DIR=$(pwd)/hyperscan-install/
+  - luarocks make HS_DIR=$(pwd)/hyperscan-install/ CFLAGS="-O0 -fPIC -ftest-coverage -fprofile-arcs" LIBFLAG="-shared --coverage"
 
 script:
   - busted
+
+after_success:
+  - coveralls -b .
