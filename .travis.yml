@@ -60,4 +60,4 @@ script:
   - busted
 
 after_success:
-  - coveralls -b .
+  - coveralls -b . -i src/luahs
