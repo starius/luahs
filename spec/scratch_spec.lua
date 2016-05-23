@@ -30,6 +30,12 @@ describe("scratch", function()
         assert.truthy(size > 0)
     end)
 
+    it("clone scratch", function()
+        local scratch1 = db:makeScratch()
+        local scratch2 = scratch1:clone()
+        assert.equal(scratch1:size(), scratch2:size())
+    end)
+
     it("get description of the scratch as string", function()
         local scratch = db:makeScratch()
         assert.truthy(tostring(scratch):match('^Hyperscan scratch'))
