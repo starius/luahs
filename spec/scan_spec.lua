@@ -106,4 +106,23 @@ describe("scan", function()
         }, db:scan({'', 'a', '', 'aaa', ''}, scratch))
     end)
 
+    it("scans unicode text (UTF-8)", function()
+        local db = luahs.compile {
+            expression = '1.3',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+            flags = luahs.pattern_flags.HS_FLAG_UTF8,
+        }
+        local scratch = db:makeScratch()
+        assert.same({
+            {id=0, from=0, to=4},
+        }, db:scan('1ф3', scratch))
+        -- control
+        local db = luahs.compile {
+            expression = '1.3',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+        local scratch = db:makeScratch()
+        assert.same({}, db:scan('1ф3', scratch))
+    end)
+
 end)
