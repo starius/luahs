@@ -45,3 +45,8 @@ boost_*
 
 # text editors
 *.swp
+
+# gcov
+*.gcov
+*.gcda
+*.gcno
