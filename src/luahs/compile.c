@@ -112,7 +112,8 @@ static hs_error_t luahs_compileMulti(
     luahs_Database* self,
     unsigned int mode,
     const hs_platform_info_t* platform,
-    hs_compile_error_t** compile_err
+    hs_compile_error_t** compile_err,
+    const char** failed
 ) {
     luaL_checktype(L, -1, LUA_TTABLE);
     int nelements = luahs_rawlen(L, -1);
@@ -226,6 +227,9 @@ static hs_error_t luahs_compileMulti(
             compile_err
         );
     }
+    if (err != HS_SUCCESS && (*compile_err)->expression >= 0) {
+        *failed = expressions[(*compile_err)->expression];
+    }
     lua_pop(L, 1); // arg1.expressions (copy)
     lua_pop(L, 1); // ext_space (userdata)
     lua_pop(L, 1); // ext_storage (userdata)
@@ -237,20 +241,27 @@ static hs_error_t luahs_compileMulti(
 
 static int luahs_throwCompileError(
     lua_State* L,
-    hs_compile_error_t* compile_err
+    hs_error_t err,
+    hs_compile_error_t* compile_err,
+    const char* failed
 ) {
     if (compile_err->expression >= 0) {
         lua_pushfstring(
             L,
-            "Unable to compile expression #%d: %s",
-            compile_err->expression,
-            compile_err->message
+            "Unable to compile expression #%d (%s): %s Error %d (%s).",
+            (int)compile_err->expression,
+            failed,
+            compile_err->message,
+            (int)err,
+            luahs_errorToString(err)
         );
     } else {
         lua_pushfstring(
             L,
-            "Unable to compile expression: %s",
-            compile_err->message
+            "Unable to compile expression: %s Error %d (%s).",
+            compile_err->message,
+            (int)err,
+            luahs_errorToString(err)
         );
     }
     hs_free_compile_error(compile_err);
@@ -275,6 +286,7 @@ static int luahs_compile(lua_State* L) {
     hs_compile_error_t* compile_err;
     hs_error_t err;
     int compiled = 0;
+    const char* failed = "(unknown)";
     if (!compiled) {
         // single expression
         lua_getfield(L, 1, "expression");
@@ -293,6 +305,9 @@ static int luahs_compile(lua_State* L) {
                 &compile_err
             );
             compiled = 1;
+            if (err != HS_SUCCESS) {
+                failed = expression;
+            }
         }
         lua_pop(L, 1);
     }
@@ -300,7 +315,14 @@ static int luahs_compile(lua_State* L) {
         // multiple expressions
         lua_getfield(L, 1, "expressions");
         if (lua_type(L, -1) != LUA_TNIL) {
-            err = luahs_compileMulti(L, self, mode, platform, &compile_err);
+            err = luahs_compileMulti(
+                L,
+                self,
+                mode,
+                platform,
+                &compile_err,
+                &failed
+            );
             compiled = 1;
         }
         lua_pop(L, 1);
@@ -309,7 +331,7 @@ static int luahs_compile(lua_State* L) {
         return luaL_error(L, "Specify 'expression' or 'expressions'");
     }
     if (err != HS_SUCCESS) {
-        return luahs_throwCompileError(L, compile_err);
+        return luahs_throwCompileError(L, err, compile_err, failed);
     }
     lua_pushvalue(L, result);
     return 1;
@@ -331,7 +353,7 @@ static int luahs_expressionInfo(lua_State* L) {
         &compile_err
     );
     if (err != HS_SUCCESS) {
-        return luahs_throwCompileError(L, compile_err);
+        return luahs_throwCompileError(L, err, compile_err, expression);
     }
     lua_createtable(L, 0, 4);
     lua_pushinteger(L, info->min_width);
