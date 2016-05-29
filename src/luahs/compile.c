@@ -84,6 +84,7 @@ static lua_Integer luahs_toFlagsInMulti(lua_State* L, int index) {
 
 static int luahs_getIntegerField(
     lua_State* L,
+    int expression_index,
     const char* field_name,
     int* result,
     luahs_FilterFunction filter
@@ -98,7 +99,8 @@ static int luahs_getIntegerField(
     } else if (id_type != LUA_TNIL) {
         return luaL_error(
             L,
-            "Bad type of arg1.expressions[i].%s: %s",
+            "Bad type of arg1.expressions[%d].%s: %s",
+            expression_index + 1,
             field_name,
             lua_typename(L, id_type)
         );
@@ -158,14 +160,14 @@ static hs_error_t luahs_compileMulti(
             lua_pop(L, 1);
             // integer fields
             int id;
-            if (luahs_getIntegerField(L, "id", &id, luaL_checkinteger)) {
+            if (luahs_getIntegerField(L, i, "id", &id, luaL_checkinteger)) {
                 if (!ids) {
                     ids = ids_space;
                 }
                 ids[i] = id;
             }
             int flags;
-            if (luahs_getIntegerField(L, "flags", &flags, luahs_toFlagsInMulti)) {
+            if (luahs_getIntegerField(L, i, "flags", &flags, luahs_toFlagsInMulti)) {
                 if (!flagss) {
                     flagss = flagss_space;
                 }
@@ -174,13 +176,13 @@ static hs_error_t luahs_compileMulti(
             // extended flags
             unsigned long long ext_flags = 0;
             int min_offset, max_offset, min_length;
-            if (luahs_getIntegerField(L, "min_offset", &min_offset, luaL_checkinteger)) {
+            if (luahs_getIntegerField(L, i, "min_offset", &min_offset, luaL_checkinteger)) {
                 ext_flags |= HS_EXT_FLAG_MIN_OFFSET;
             }
-            if (luahs_getIntegerField(L, "max_offset", &max_offset, luaL_checkinteger)) {
+            if (luahs_getIntegerField(L, i, "max_offset", &max_offset, luaL_checkinteger)) {
                 ext_flags |= HS_EXT_FLAG_MAX_OFFSET;
             }
-            if (luahs_getIntegerField(L, "min_length", &min_length, luaL_checkinteger)) {
+            if (luahs_getIntegerField(L, i, "min_length", &min_length, luaL_checkinteger)) {
                 ext_flags |= HS_EXT_FLAG_MIN_LENGTH;
             }
             if (ext_flags) {
@@ -196,7 +198,8 @@ static hs_error_t luahs_compileMulti(
         } else {
             return luaL_error(
                 L,
-                "Bad type of arg1.expressions[i].expression: %s",
+                "Bad type of arg1.expressions[%d].expression: %s",
+                i + 1,
                 lua_typename(L, expression_type)
             );
         }
