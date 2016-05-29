@@ -19,4 +19,8 @@ describe("constants", function()
         assert.equal("string", type(luahs.decodeError(0)))
     end)
 
+    it("returns 'Unknown error.' on unknown error", function()
+        assert.truthy(luahs.decodeError(42):match('[Uu]nknown'))
+    end)
+
 end)
