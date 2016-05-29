@@ -131,9 +131,9 @@ describe("compilation", function()
     end)
 
     it("get information about RE", function()
-        local db = luahs.expressionInfo('aaa?')
-        assert.equal(2, db.min_width)
-        assert.equal(3, db.max_width)
+        local info = luahs.expressionInfo('aaa?')
+        assert.equal(2, info.min_width)
+        assert.equal(3, info.max_width)
     end)
 
     it("throws on bad arguments", function()
