@@ -232,6 +232,15 @@ describe("compilation", function()
         assert.has_error(function()
             luahs.compile {
                 expressions = {
+                    123,
+                    456,
+                },
+                mode = luahs.compile_mode.HS_MODE_BLOCK,
+            }
+        end)
+        assert.has_error(function()
+            luahs.compile {
+                expressions = {
                     {
                         expression = 'aaa',
                         flags = 'caseless',
