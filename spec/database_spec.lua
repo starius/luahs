@@ -66,4 +66,31 @@ describe("database", function()
         assert.equal(db:info(), luahs.infoOfDeserialized(data))
     end)
 
+    it("throws if deserializing garbage", function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+        local data = db:serialize()
+        assert.has_error(function()
+            luahs.deserialize(data .. '\0')
+        end)
+        assert.has_error(function()
+            luahs.sizeOfDeserialized(data .. '\0')
+        end)
+    end)
+
+    -- https://github.com/01org/hyperscan/pull/22
+    pending("sizeOfDeserialized throws if deserializing garbage",
+    function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+        local data = db:serialize()
+        assert.has_error(function()
+            luahs.infoOfDeserialized(data .. '\0')
+        end)
+    end)
+
 end)
