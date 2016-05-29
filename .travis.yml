@@ -54,7 +54,7 @@ before_install:
   - luarocks install busted
 
 install:
-  - luarocks make HS_DIR=$(pwd)/hyperscan-install/ CFLAGS="-O0 -fPIC -ftest-coverage -fprofile-arcs" LIBFLAG="-shared --coverage"
+  - luarocks make HS_DIR=$(pwd)/hyperscan-install/ CFLAGS="-O0 -fPIC --coverage" LIBFLAG="-shared --coverage"
 
 script:
   - busted
