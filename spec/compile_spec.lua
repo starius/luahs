@@ -183,6 +183,12 @@ describe("compilation", function()
         end)
     end)
 
+    it("expressionInfo throws on bad pattern", function()
+        assert.has_error(function()
+            luahs.expressionInfo('[')
+        end)
+    end)
+
     it("throws on bad arguments", function()
         assert.has_error(function()
             luahs.compile()
