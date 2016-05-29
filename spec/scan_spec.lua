@@ -22,6 +22,17 @@ describe("scan", function()
         }, db:scan('aaaa', scratch))
     end)
 
+    it("throws if text is of bad type", function()
+        local db = luahs.compile {
+            expression = 'aaa',
+            mode = luahs.compile_mode.HS_MODE_BLOCK,
+        }
+        local scratch = db:makeScratch()
+        assert.has_error(function()
+            db:scan(123, scratch)
+        end)
+    end)
+
     it("scans multiple expressions", function()
         local db = luahs.compile {
             expressions = {
