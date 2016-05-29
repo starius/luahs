@@ -44,6 +44,27 @@ describe("compilation", function()
         }
     end)
 
+    it("throws on incorrect platform structure", function()
+        assert.has_error(function()
+            luahs.compile {
+                expression = 'aaa',
+                mode = luahs.compile_mode.HS_MODE_BLOCK,
+                platform = {
+                    tune = 'generic',
+                },
+            }
+        end)
+        assert.has_error(function()
+            luahs.compile {
+                expression = 'aaa',
+                mode = luahs.compile_mode.HS_MODE_BLOCK,
+                platform = {
+                    cpu_features = 'generic',
+                },
+            }
+        end)
+    end)
+
     it("specify flags", function()
         local db = luahs.compile {
             expression = 'aaa',
@@ -156,6 +177,12 @@ describe("compilation", function()
         assert.equal(3, info.max_width)
     end)
 
+    it("expressionInfo throws on bad flags", function()
+        assert.has_error(function()
+            luahs.expressionInfo('aaa', 'allow_empty')
+        end)
+    end)
+
     it("throws on bad arguments", function()
         assert.has_error(function()
             luahs.compile()
@@ -168,6 +195,9 @@ describe("compilation", function()
         end)
         assert.has_error(function()
             luahs.compile({expression='aaa', mode=42})
+        end)
+        assert.has_error(function()
+            luahs.compile({expression='aaa', mode='block'})
         end)
         assert.has_error(function()
             luahs.compile {
@@ -195,6 +225,17 @@ describe("compilation", function()
             luahs.compile {
                 expressions = {
                     {},
+                },
+                mode = luahs.compile_mode.HS_MODE_BLOCK,
+            }
+        end)
+        assert.has_error(function()
+            luahs.compile {
+                expressions = {
+                    {
+                        expression = 'aaa',
+                        flags = 'caseless',
+                    },
                 },
                 mode = luahs.compile_mode.HS_MODE_BLOCK,
             }
@@ -240,6 +281,13 @@ describe("compilation", function()
                         min_length = 4,
                     },
                 },
+                mode = luahs.compile_mode.HS_MODE_BLOCK,
+            }
+        end)
+        assert.has_error(function()
+            luahs.compile {
+                expression = 'aaa',
+                flags = 'aaa',
                 mode = luahs.compile_mode.HS_MODE_BLOCK,
             }
         end)
