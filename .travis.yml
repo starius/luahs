@@ -72,4 +72,9 @@ script:
   - if [[ "$LUA" != *"luajit"* ]]; then /tmp/bin/valgrind --suppressions=/usr/lib/valgrind/default.supp --error-exitcode=1 --leak-check=full lua spec/exitless-busted.lua; fi
 
 after_success:
+  # Disable timestamp check of gcno and gcda.
+  # See http://stackoverflow.com/q/22860538
+  # Some .o are rebuilt two times because of luahs_runtime.
+  - for i in src/luahs/*.gcno; do dd conv=notrunc if=$i bs=1 skip=8 count=4 of=$(echo $i | sed 's/gcno$/gcda/') seek=8; done
+
   - coveralls -b . -i src/luahs
