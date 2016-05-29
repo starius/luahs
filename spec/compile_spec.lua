@@ -136,6 +136,26 @@ describe("compilation", function()
         assert.equal(3, info.max_width)
     end)
 
+    it("get information about RE with flags as integer",
+    function()
+        local info = luahs.expressionInfo(
+            'a?a?a?',
+            luahs.pattern_flags.HS_FLAG_ALLOWEMPTY
+        )
+        assert.equal(0, info.min_width)
+        assert.equal(3, info.max_width)
+    end)
+
+    it("get information about RE with flags as table",
+    function()
+        local info = luahs.expressionInfo(
+            'a?a?a?',
+            {luahs.pattern_flags.HS_FLAG_ALLOWEMPTY}
+        )
+        assert.equal(0, info.min_width)
+        assert.equal(3, info.max_width)
+    end)
+
     it("throws on bad arguments", function()
         assert.has_error(function()
             luahs.compile()
