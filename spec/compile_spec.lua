@@ -24,14 +24,14 @@ describe("compilation", function()
             expression = 'aaa',
             mode = luahs.compile_mode.HS_MODE_BLOCK,
             platform = {
-                tuning = luahs.cpu_tuning.HS_TUNE_FAMILY_GENERIC,
+                tune = luahs.cpu_tuning.HS_TUNE_FAMILY_GENERIC,
             },
         }
         local db = luahs.compile {
             expression = 'aaa',
             mode = luahs.compile_mode.HS_MODE_BLOCK,
             platform = {
-                tuning = {
+                tune = {
                     luahs.cpu_tuning.HS_TUNE_FAMILY_GENERIC,
                     luahs.cpu_tuning.HS_TUNE_FAMILY_SNB,
                 },
