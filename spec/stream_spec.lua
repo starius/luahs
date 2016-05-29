@@ -145,4 +145,32 @@ describe("stream", function()
         end)
     end)
 
+    it("throws on using smaller scratch", function()
+        local large_db = luahs.compile {
+            expression = 'a{100,500}.*b{100,500}',
+            mode = luahs.compile_mode.HS_MODE_STREAM,
+        }
+        local large_stream = large_db:makeStream()
+        local large_scratch = large_db:makeScratch()
+        --
+        local small_db = luahs.compile {
+            expression = 'a',
+            mode = luahs.compile_mode.HS_MODE_STREAM,
+        }
+        local small_scratch = small_db:makeScratch()
+        if small_scratch:size() < large_scratch:size() then
+            assert.has_error(function()
+                large_stream:scan('a', small_scratch)
+            end)
+            assert.has_error(function()
+                large_stream:close(small_scratch)
+            end)
+            assert.has_error(function()
+                large_stream:reset(small_scratch)
+            end)
+        else
+            print('Warning! Assumption of scratch sizes is wrong.')
+        end
+    end)
+
 end)
