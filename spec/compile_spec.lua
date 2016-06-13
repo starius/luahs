@@ -157,6 +157,12 @@ describe("compilation", function()
         assert.equal(3, info.max_width)
     end)
 
+    it("get information about RE (max_width is inf)", function()
+        local info = luahs.expressionInfo('aaa*')
+        assert.equal(2, info.min_width)
+        assert.equal(luahs.UINT_MAX, info.max_width)
+    end)
+
     it("get information about RE with flags as integer",
     function()
         local info = luahs.expressionInfo(
