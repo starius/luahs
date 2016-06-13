@@ -2,6 +2,8 @@
 // Copyright (C) 2016 Boris Nagaev
 // See the LICENSE file for terms of use.
 
+#include <limits.h>
+
 #include "luahs.h"
 
 typedef struct luahs_Constant {
@@ -160,4 +162,6 @@ void luahs_addConstants(lua_State* L) {
     lua_setfield(L, -2, "decodeError");
     lua_pushinteger(L, HS_OFFSET_PAST_HORIZON);
     lua_setfield(L, -2, "HS_OFFSET_PAST_HORIZON");
+    lua_pushinteger(L, UINT_MAX);
+    lua_setfield(L, -2, "UINT_MAX");
 }

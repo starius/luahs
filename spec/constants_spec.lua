@@ -13,6 +13,7 @@ describe("constants", function()
         assert.equal(4, luahs.cpu_features.HS_CPU_FEATURES_AVX2)
         assert.equal(2, luahs.cpu_tuning.HS_TUNE_FAMILY_IVB)
         assert.equal(-1, luahs.HS_OFFSET_PAST_HORIZON)
+        assert.truthy(luahs.UINT_MAX > 0)
     end)
 
     it("decodes constants", function()
