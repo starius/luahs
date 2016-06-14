@@ -234,7 +234,39 @@ See [fields of table `info`][hs_expr_info].
 
 ### Scan a database against a text
 
-TODO
+To scan a text against a database, you need a scratch object.
+It can be created using method `db:makeScratch()`:
+
+```lua
+db = luahs.compile {
+    expression = 'aaa',
+    mode = luahs.compile_mode.HS_MODE_BLOCK,
+}
+scratch = db:makeScratch()
+```
+
+Then you can scan a text:
+
+```lua
+hits = db:scan('aaa')
+-- hits is {{id=0, from=0, to=3}}
+```
+
+Method `scan` returns hits. Each hit is a table with
+the following fields:
+
+  * `id` - identifier of a pattern
+  * `from` - start of a hit, 0-based.
+    If Start-Of-Match flag is not set, `from` is always equal to 0.
+  * `to` - end of a hit, 0-based index of a first byte after a hit.
+
+If a database is compiled in vectored mode
+(`mode` = `luahs.compile_mode.HS_MODE_VECTORED`), you have to pass
+a table of strings to `scan` method:
+
+```lua
+hits = db:scan({'a', 'aa'})
+```
 
 #### Stream mode
 
