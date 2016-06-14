@@ -270,7 +270,64 @@ hits = db:scan({'a', 'aa'})
 
 #### Stream mode
 
-TODO
+To scan in stream mode, you need a stream object:
+
+```lua
+db = luahs.compile {
+    expression = 'abc',
+    mode = luahs.compile_mode.HS_MODE_STREAM,
+}
+scratch = db:makeScratch()
+stream = db:makeStream()
+```
+
+Apply method `scan` to the stream object:
+
+```lua
+hits1 = stream:scan('a', scratch) -- hits1 is {}
+hits2 = stream:scan('b', scratch) -- hits2 is {}
+hits3 = stream:scan('c', scratch) -- hits3 is {{id=0, from=0, to=3}}
+```
+
+You have to close a stream using method `close`:
+
+```
+hits = stream:close(scratch)
+```
+
+Method `close` also can return some hits.
+
+You can reset a stream object:
+
+```lua
+hits = stream:reset(scratch)
+```
+
+A call to `reset` has the same effect to a call to `close` followed by
+creating a new stream for the same database.
+
+Stream objects of the same database can be assigned to each other:
+
+```lua
+db = luahs.compile {
+    expression = 'aaa$',
+    mode = luahs.compile_mode.HS_MODE_STREAM,
+}
+scratch = db:makeScratch()
+stream1 = db:makeStream()
+stream2 = db:makeStream()
+stream1:scan('a', scratch) -- returns {}
+stream1:scan('a', scratch) -- returns {}
+stream1:scan('a', scratch) -- returns {}
+stream2:assign(stream1, scratch) -- returns {}
+-- stream2 := stream1;
+stream2:reset(scratch) -- returns {{id=0, from=0, to=3}}
+```
+
+You can also clone a stream: `clone = stream:clone()`.
+
+You can get a database back from a stream using
+method `stream:database()`.
 
 ### Database serialization
 
